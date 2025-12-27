@@ -7,21 +7,14 @@ const elements = {
     modeSearch: document.getElementById('mode-search'),
     modeAi: document.getElementById('mode-ai'),
     aiSettings: document.getElementById('ai-settings'),
-    searchSettings: document.getElementById('search-settings'),
-    openaiInput: document.getElementById('openai-key-input'),
-    saveOpenaiBtn: document.getElementById('save-openai-btn'),
-    osInput: document.getElementById('os-key-input'),
-    saveOsBtn: document.getElementById('save-os-btn')
+    searchSettings: document.getElementById('search-settings')
 };
 
 let currentMeta = null;
 let currentMode = 'search';
 
 async function init() {
-    const data = await chrome.storage.sync.get(['openaiKey', 'osApiKey']);
-    if (data.openaiKey) elements.openaiInput.value = data.openaiKey;
-    if (data.osApiKey) elements.osInput.value = data.osApiKey;
-
+    // No keys to load
     updateStatus('Scanning for video...');
 
     // Try to detect video multiple times
@@ -109,39 +102,17 @@ elements.modeAi.addEventListener('click', () => {
     elements.findBtn.innerHTML = '<span>🚀</span> Initialize Engine';
 });
 
-// Save keys
-elements.saveOpenaiBtn.addEventListener('click', async () => {
-    const key = elements.openaiInput.value.trim();
-    if (key) {
-        await chrome.storage.sync.set({ openaiKey: key });
-        updateStatus('OpenAI Key Saved! 🔒');
-        setTimeout(() => updateStatus('Ready'), 2000);
-    }
-});
-
-elements.saveOsBtn.addEventListener('click', async () => {
-    const key = elements.osInput.value.trim();
-    if (key) {
-        await chrome.storage.sync.set({ osApiKey: key });
-        updateStatus('OpenSubtitles Key Saved! 🔒');
-        setTimeout(() => updateStatus('Ready'), 2000);
-    }
-});
-
 // Start Button Logic
 elements.findBtn.addEventListener('click', async () => {
     // Only block if no metadata AND empty search input
     const searchQuery = elements.manualSearchInput.value.trim();
     if (!currentMeta && !searchQuery) return;
 
+    // Keyless Search Logic
     if (currentMode === 'search') {
-        const data = await chrome.storage.sync.get(['osApiKey']);
-        if (!data.osApiKey) return updateStatus('Set OpenSubtitles API Key first', true);
-
         elements.findBtn.disabled = true;
-        updateStatus('Searching free databases...');
+        updateStatus('Searching YIFY Database...');
 
-        // Use manual input if available, else detected title
         const query = searchQuery || currentMeta?.title;
 
         chrome.runtime.sendMessage({
@@ -149,28 +120,38 @@ elements.findBtn.addEventListener('click', async () => {
             params: { title: query }
         }, (response) => {
             elements.findBtn.disabled = false;
-            if (!response || !response.success) {
-                return updateStatus(response?.error || 'Unknown error', true);
+
+            if (chrome.runtime.lastError) {
+                return updateStatus('Error: ' + chrome.runtime.lastError.message, true);
             }
 
-            updateStatus('Subtitles Synchronized ✅');
+            if (!response || !response.success) {
+                return updateStatus(response?.error || 'No subtitles found.', true);
+            }
+
+            updateStatus('Subtitles Loaded (YIFY) ✅');
             chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
                 chrome.tabs.sendMessage(tab.id, {
                     action: 'INJECT_SUBTITLE',
                     content: response.content
-                }, { frameId: currentFrameId }); // Target the specific frame
+                }, { frameId: currentFrameId });
             });
         });
     } else {
-        // AI Mode
-        const data = await chrome.storage.sync.get(['openaiKey']);
-        if (!data.openaiKey) return updateStatus('Set OpenAI Key first', true);
-
+        // AI Mode (Local)
         elements.findBtn.classList.add('hidden');
         elements.stopAiBtn.classList.remove('hidden');
-        updateStatus('AI Transcription Active... 🎙️');
+        updateStatus('Initializing Local AI Model... (First run takes time)');
 
-        chrome.runtime.sendMessage({ action: 'START_AI_MODE' });
+        chrome.runtime.sendMessage({ action: 'START_AI_MODE' }, (response) => {
+            if (response && response.success) {
+                updateStatus('Local AI Listening... 🎙️');
+            } else {
+                elements.stopAiBtn.classList.add('hidden');
+                elements.findBtn.classList.remove('hidden');
+                updateStatus('AI Error: ' + (response?.error || 'Unknown'), true);
+            }
+        });
     }
 });
 

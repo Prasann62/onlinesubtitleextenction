@@ -1,96 +1,106 @@
 /**
  * background.js
- * Optimized for personal use: Stable OpenSubtitles API & OpenAI Whisper
+ * Optimized for personal use: YIFY Subtitles & Local AI (Transformers.js)
  */
 
 const CONFIG = {
-    OPENAI_BASE_URL: 'https://api.openai.com/v1',
     // OpenSubtitles requires a specific User-Agent format: AppName vVersion
     USER_AGENT: 'AISubtitleSearch v2.0.0'
 };
 
-class OpenSubtitlesClient {
-    static async search(title) {
-        const storage = await chrome.storage.sync.get(['osApiKey']);
-        const apiKey = storage.osApiKey; // OpenSubtitles API Key
+// --- Minimalistic ZIP Parser for Deflate ---
+class ZipParser {
+    static async unzipFirstFile(blob) {
+        const buffer = await blob.arrayBuffer();
+        const data = new Uint8Array(buffer);
+        const view = new DataView(buffer);
 
-        if (!apiKey) throw new Error('OpenSubtitles API Key missing. Please set it in the extension popup.');
-
-        console.log(`[OpenSubtitles] Searching for: ${title}`);
-        // ... rest of search logic unchanged
-        const res = await fetch(
-            `https://api.opensubtitles.com/api/v1/subtitles?query=${encodeURIComponent(title)}&languages=en,ja`,
-            {
-                headers: {
-                    'Api-Key': apiKey,
-                    'User-Agent': CONFIG.USER_AGENT,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`API Error ${res.status}: ${errText}`);
+        // Check Signature: PK\x03\x04
+        if (view.getUint32(0, true) !== 0x04034b50) {
+            throw new Error('Invalid ZIP format');
         }
 
-        const json = await res.json();
-        if (!json.data || !json.data.length) return null;
+        const compressionMethod = view.getUint16(8, true);
+        const nameLen = view.getUint16(26, true);
+        const extraLen = view.getUint16(28, true);
 
-        return json.data[0].attributes.files[0].file_id;
-    }
+        // Offset to data
+        const offset = 30 + nameLen + extraLen;
 
-    static async download(fileId) {
-        const storage = await chrome.storage.sync.get(['osApiKey']);
-        const apiKey = storage.osApiKey;
+        // Find compressed size
+        const compressedSize = view.getUint32(18, true);
 
-        const res = await fetch(
-            `https://api.opensubtitles.com/api/v1/download`,
-            {
-                method: 'POST',
-                headers: {
-                    'Api-Key': apiKey,
-                    'User-Agent': CONFIG.USER_AGENT,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ file_id: fileId })
-            }
-        );
+        if (compressionMethod !== 8) {
+            throw new Error('Unsupported compression method (only Deflate supported)');
+        }
 
-        const json = await res.json();
-        if (!json.link) throw new Error('Failed to get download link from API');
+        const compressedData = data.subarray(offset, offset + compressedSize);
 
-        const sub = await fetch(json.link);
-        return await sub.text();
+        // Inflate
+        const stream = new DecompressionStream('deflate-raw');
+        const writer = stream.writable.getWriter();
+        writer.write(compressedData);
+        writer.close();
+
+        const response = new Response(stream.readable);
+        return await response.text();
     }
 }
 
-class OpenAIClient {
-    static async transcribe(blob, apiKey) {
-        console.log(`[OpenAI] Transcribing ${blob.size} bytes...`);
-        // ... (rest is same)
-        const formData = new FormData();
-        const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
-        formData.append('file', blob, `audio.${ext}`);
-        formData.append('model', 'whisper-1');
-        formData.append('response_format', 'vtt');
-        formData.append('prompt', 'Transcribe the audio accurately as subtitles. Do not omit any words. Maintain correct punctuation and capitalization.');
+class YIFYClient {
+    static async search(title) {
+        console.log(`[YIFY] Searching for: ${title}`);
+        try {
+            // TRY 1: YTS API for Movie ID
+            const ytsRes = await fetch(`https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(title)}&limit=1`);
+            const ytsJson = await ytsRes.json();
 
-        const response = await fetch(`${CONFIG.OPENAI_BASE_URL}/audio/transcriptions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({ error: { message: response.statusText } }));
-            throw new Error(err.error?.message || 'OpenAI API Error');
+            if (ytsJson.data.movie_count > 0) {
+                return ytsJson.data.movies[0].imdb_code;
+            }
+            throw new Error('Movie not found on YTS');
+        } catch (e) {
+            console.error('[YIFY] Search failed:', e);
+            throw new Error('Could not find subtitles (YIFY/YTS).');
         }
+    }
 
-        return await response.text();
+    static async download(imdbId) {
+        try {
+            // 1. Get the movie page on yifysubtitles.ch
+            const movieUrl = `https://yifysubtitles.ch/movie-imdb/${imdbId}`;
+            const res = await fetch(movieUrl);
+            const html = await res.text();
+
+            // 2. Find English subtitle download link
+            const regex = /<tr[^>]*>[\s\S]*?English[\s\S]*?<a[^>]+href="([^"]+)"/i;
+            const match = html.match(regex);
+
+            if (!match) throw new Error('No English subtitles found on YIFY.');
+
+            const subPagePath = match[1];
+
+            // 3. Get the Download Page
+            const dlRes = await fetch(`https://yifysubtitles.ch${subPagePath}`);
+            const dlHtml = await dlRes.text();
+
+            // 4. Find the .zip link
+            const zipMatch = dlHtml.match(/href="([^"]+\.zip)"/);
+            if (!zipMatch) throw new Error('Download link not found.');
+
+            const zipUrl = zipMatch[1].startsWith('http') ? zipMatch[1] : `https://yifysubtitles.ch${zipMatch[1]}`;
+
+            // 5. Download ZIP
+            const zipResp = await fetch(zipUrl);
+            const blob = await zipResp.blob();
+
+            // 6. Unzip
+            return await ZipParser.unzipFirstFile(blob);
+
+        } catch (e) {
+            console.error('[YIFY] Download failed', e);
+            throw new Error('Failed to download/extract subtitles.');
+        }
     }
 }
 
@@ -98,67 +108,49 @@ class OpenAIClient {
 let isCapturing = false;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // 1. Smart Process (OpenSubtitles)
+    // 1. Smart Process (YIFY)
     if (message.action === 'SMART_PROCESS') {
         (async () => {
             try {
                 const { title } = message.params;
-                const fileId = await OpenSubtitlesClient.search(title);
+                const imdbId = await YIFYClient.search(title);
 
-                if (!fileId) {
-                    sendResponse({ success: false, error: 'No subtitles found (Search Mode)' });
+                if (!imdbId) {
+                    sendResponse({ success: false, error: 'Movie not found' });
                     return;
                 }
 
-                const content = await OpenSubtitlesClient.download(fileId);
-                sendResponse({ success: true, content, type: 'OS_API' });
+                const content = await YIFYClient.download(imdbId);
+                sendResponse({ success: true, content, type: 'YIFY' });
             } catch (err) {
                 console.error(err);
                 sendResponse({ success: false, error: err.message });
             }
         })();
-        return true; // Keep channel open
+        return true;
     }
 
-    // 2. Start AI Mode
+    // 2. Start AI Mode (Keyless / Transformers)
     if (message.action === 'START_AI_MODE') {
         (async () => {
             try {
-                const storage = await chrome.storage.sync.get(['openaiKey']);
-                if (!storage.openaiKey) {
-                    sendResponse({ success: false, error: 'Set OpenAI Key first' });
-                    return;
-                }
-
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
                 if (!tab) return;
 
-                // Note: We might need frameId for videoMeta if video is in iframe, 
-                // but for tabCapture we just need the tabId. 
-                // However, syncing video time might require talking to the specific frame.
-                // Assuming popup passes frameId if needed in future, but for now tab capture records whole tab audio.
-
-                // 1. Get Video Time for sync (targeting main frame for now, or just defaulting)
-                // If we want robustness we should query the frame with video.
-                // For simplicity in this task, we proceed with tab capture.
-
-                // 2. Ensure Offscreen Document
+                // Ensure Offscreen Document
                 await setupOffscreenDocument('offscreen.html');
 
-                // 3. Get Tab Stream ID
+                // Get Tab Stream ID
                 chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id }, (streamId) => {
                     chrome.runtime.sendMessage({
                         target: 'offscreen',
-                        action: 'START_CAPTURE',
+                        action: 'START_CAPTURE_LOCAL',
                         streamId: streamId,
-                        videoTime: 0 // Simplification: we rely on live sync offset
+                        videoTime: 0
                     });
                 });
 
-                // 4. Notify content script to show status (broadcast to all frames)
-                // chrome.tabs.sendMessage to all frames? content.js logic handles display
                 chrome.tabs.sendMessage(tab.id, { action: 'AI_MODE_STARTED' });
-
                 isCapturing = true;
                 sendResponse({ success: true });
             } catch (err) {
@@ -169,31 +161,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
-    // 3. Process Audio Chunk (From Offscreen)
-    if (message.action === 'OFFSCREEN_CHUNK') {
+    // 3. Process Local AI Result (From Offscreen -> Worker -> Background -> Content)
+    if (message.action === 'LOCAL_AI_RESULT') {
         (async () => {
-            try {
-                const storage = await chrome.storage.sync.get(['openaiKey']);
-                const { data, offset } = message;
-
-                // Convert DataURL back to Blob
-                const res = await fetch(data);
-                const blob = await res.blob();
-
-                const vttContent = await OpenAIClient.transcribe(blob, storage.openaiKey);
-
-                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-                if (tab) {
-                    // Send to all frames because we don't know which one has the video overlay
-                    // Content script checks if it should display
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: 'UPDATE_AI_SUBTITLES',
-                        content: vttContent,
-                        offset: offset
-                    });
-                }
-            } catch (err) {
-                console.error('[Background] Transcription failed', err);
+            const { text, offset } = message;
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab && text) {
+                chrome.tabs.sendMessage(tab.id, {
+                    action: 'UPDATE_AI_SUBTITLES',
+                    content: `WEBVTT\n\n00:00:00.000 --> 00:00:10.000\n${text}`,
+                    offset: 0
+                });
             }
         })();
         return true;
@@ -244,4 +222,3 @@ async function closeOffscreenDocument() {
         await chrome.offscreen.closeDocument();
     }
 }
-

@@ -37,5 +37,18 @@
             "all_frames": true,
             "run_at": "document_end"
         }
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "worker.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
     ]
 }

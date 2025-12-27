@@ -1,26 +1,43 @@
-/**
- * offscreen.js
- * Handles MediaStream from tabCapture and sends chunks to background.
- */
 
-let mediaRecorder;
-const CHUNK_INTERVAL = 5000; // 5 seconds for near real-time
+let audioContext;
+let mediaStream;
+let worker;
+
+// Initialize Worker
+worker = new Worker('worker.js', { type: 'module' });
+
+worker.onmessage = (e) => {
+    const { type, text, status, progress, message } = e.data;
+    if (type === 'result') {
+        chrome.runtime.sendMessage({
+            action: 'LOCAL_AI_RESULT',
+            text: text,
+            offset: 0
+        });
+    } else if (type === 'status') {
+        if (status === 'downloading') {
+            console.log(`[AI Model] Downloading: ${Math.round(progress)}%`);
+        }
+    } else if (type === 'error') {
+        console.error('[Worker Error]', message);
+    }
+};
 
 chrome.runtime.onMessage.addListener(async (message) => {
     if (message.target !== 'offscreen') return;
 
-    if (message.action === 'START_CAPTURE') {
-        startCapture(message.streamId, message.videoTime);
+    if (message.action === 'START_CAPTURE_LOCAL') {
+        await startCapture(message.streamId);
     } else if (message.action === 'STOP_CAPTURE') {
         stopCapture();
     }
 });
 
-async function startCapture(streamId, videoTime) {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') return;
+async function startCapture(streamId) {
+    if (audioContext) stopCapture();
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        mediaStream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 mandatory: {
                     chromeMediaSource: 'tab',
@@ -31,48 +48,58 @@ async function startCapture(streamId, videoTime) {
         });
 
         // Continue playing audio in the tab while capturing
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
+        audioContext = new AudioContext({ sampleRate: 16000 });
+        const source = audioContext.createMediaStreamSource(mediaStream);
+
+        // Dest for playback (to hear audio) ? 
+        // When capturing tab audio, it mutes the tab unless we connect to destination.
+        // But if we connect to destination here in offscreen, does user hear it?
+        // Usually yes.
         source.connect(audioContext.destination);
 
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-        let currentChunkTime = videoTime;
+        // Processor for AI
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        source.connect(processor);
+        // We also need to connect processor to destination or it won't fire 'onaudioprocess' in some browsers?
+        // Actually it's good practice to connect to destination with gain 0 if we don't want to hear it twice, 
+        // but here the source is already connected.
+        // processor.connect(audioContext.destination); // Careful of feedback/echo if it passes through.
+        // ScriptProcessor is old but reliable. AudioWorklet is better but harder in one file.
+        // We need 'processor' to be connected to *something* for the events to fire.
+        const muteNode = audioContext.createGain();
+        muteNode.gain.value = 0;
+        processor.connect(muteNode);
+        muteNode.connect(audioContext.destination);
 
-        mediaRecorder.ondataavailable = async (event) => {
-            if (event.data.size > 0) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    chrome.runtime.sendMessage({
-                        action: 'OFFSCREEN_CHUNK',
-                        data: reader.result,
-                        offset: currentChunkTime
-                    });
-                };
-                reader.readAsDataURL(event.data);
+        let audioBuffer = [];
+        const CHUNK_SIZE = 16000 * 5; // ~5 seconds
+
+        processor.onaudioprocess = (e) => {
+            const inputData = e.inputBuffer.getChannelData(0);
+            audioBuffer.push(...inputData);
+
+            if (audioBuffer.length >= CHUNK_SIZE) {
+                const chunk = new Float32Array(audioBuffer);
+                worker.postMessage({
+                    type: 'transcribe',
+                    audio: chunk
+                });
+                audioBuffer = [];
             }
         };
 
-        mediaRecorder.start();
-
-        // Chunking interval
-        const intervalId = setInterval(() => {
-            if (mediaRecorder.state === 'recording') {
-                currentChunkTime += CHUNK_INTERVAL / 1000;
-                mediaRecorder.stop();
-                mediaRecorder.start();
-            } else {
-                clearInterval(intervalId);
-            }
-        }, CHUNK_INTERVAL);
-
-    } catch (err) {
-        console.error('Offscreen capture failed:', err);
-        chrome.runtime.sendMessage({ action: 'CAPTURE_ERROR', error: err.message });
+    } catch (e) {
+        console.error('Capture failed', e);
     }
 }
 
 function stopCapture() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
     }
 }

@@ -215,6 +215,14 @@ input:focus {
     color: white;
 }
 
+.status-text {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 500;
+    margin-top: 4px;
+    display: block;
+}
+
 /* Utilities */
 .hidden {
     display: none !important;
