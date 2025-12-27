@@ -1,0 +1,234 @@
+/* Premium Dark Mode Design */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #3b82f6;
+    /* Modern Blue */
+    --primary-hover: #2563eb;
+    --primary-glow: rgba(59, 130, 246, 0.4);
+
+    --bg-color: #09090b;
+    /* Zinc 950 */
+    --card-bg: #18181b;
+    /* Zinc 900 */
+    --card-border: rgba(255, 255, 255, 0.08);
+
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+
+    --input-bg: #27272a;
+    --input-border: rgba(255, 255, 255, 0.1);
+
+    --accent-red: #ef4444;
+    --accent-red-glow: rgba(239, 68, 68, 0.3);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    width: 360px;
+    /* Slightly wider */
+    margin: 0;
+    padding: 0;
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+.app-shell {
+    padding: 24px;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent 40%);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Header */
+header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.logo-container {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), #1d4ed8);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to right, #ffffff, #a1a1aa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.label-sm {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+/* Mode Selector */
+.mode-selector {
+    display: flex;
+    background: var(--bg-color);
+    /* Darker inset */
+    border-radius: var(--radius-md);
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 16px;
+    border: 1px solid var(--card-border);
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.mode-btn.active {
+    background: var(--card-bg);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+.mode-btn:hover:not(.active) {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Buttons */
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), #2563eb);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px var(--primary-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--primary-glow);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--accent-red), #dc2626);
+    box-shadow: 0 4px 12px var(--accent-red-glow);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 8px 20px var(--accent-red-glow);
+}
+
+.save-btn {
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    border-radius: var(--radius-sm);
+    padding: 0 16px;
+    /* Height comes from flex stretch matching input */
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: var(--transition);
+    margin-left: 8px;
+}
+
+.save-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+.flex-row {
+    display: flex;
+    align-items: stretch;
+    margin-top: 8px;
+}
+
+#status {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}

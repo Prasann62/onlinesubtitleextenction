@@ -1,235 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #3498db;
-            --primary-glow: rgba(52, 152, 219, 0.4);
-            --bg: #0a0a0b;
-            --card-bg: #161618;
-            --text: #ffffff;
-            --text-dim: #94949e;
-            --accent: #ff4757;
-        }
-
-        body {
-            width: 340px;
-            padding: 0;
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            overflow: hidden;
-        }
-
-        .app-shell {
-            padding: 24px;
-            background: linear-gradient(180deg, rgba(52, 152, 219, 0.05) 0%, rgba(10, 10, 11, 0) 100%);
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        header .logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary), #2980b9);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px var(--primary-glow);
-        }
-
-        h1 {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            background: linear-gradient(to right, #fff, #aaa);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .label-sm {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .video-title {
-            font-size: 14px;
-            font-weight: 400;
-            color: #eee;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .mode-selector {
-            display: flex;
-            background: #000;
-            border-radius: 12px;
-            padding: 4px;
-            gap: 4px;
-        }
-
-        .mode-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: none;
-            color: var(--text-dim);
-            font-size: 12px;
-            font-weight: 500;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .mode-btn.active {
-            background: #252529;
-            color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-
-        .input-group {
-            margin-top: 16px;
-        }
-
-        input {
-            width: 100%;
-            background: #000;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .btn-primary {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 8px 20px var(--primary-glow);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px var(--primary-glow);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            background: #333;
-            box-shadow: none;
-            cursor: not-allowed;
-            color: #666;
-        }
-
-        .btn-danger {
-            background: var(--accent);
-            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.3);
-        }
-
-        .btn-danger:hover {
-            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
-        }
-
-        #status {
-            font-size: 12px;
-            color: var(--text-dim);
-            text-align: center;
-            margin-top: 16px;
-            font-weight: 400;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .flex-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .video-title-input {
-            width: 100%;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #eee;
-            font-size: 14px;
-            font-family: inherit;
-            padding: 8px;
-            border-radius: 8px;
-            margin-top: 4px;
-        }
-
-        .video-title-input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .save-btn {
-            background: #252529;
-            border: none;
-            color: white;
-            border-radius: 10px;
-            padding: 0 16px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 12px;
-            transition: background 0.2s;
-        }
-
-        .save-btn:hover {
-            background: #333;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextSub AI</title>
+    <link rel="stylesheet" href="popup.css">
+    <!-- Preload Font for speed -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 
 <body>
     <div class="app-shell">
         <header>
-            <div class="logo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+            <div class="logo-container">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -237,39 +23,48 @@
             <h1>NextSub AI</h1>
         </header>
 
+        <!-- Live Detection Card -->
         <div id="video-info" class="card hidden">
-            <span class="label-sm">Live Context</span>
-            <input type="text" id="manual-search-input" placeholder="Detected Title" class="video-title-input">
+            <span class="label-sm">Detected Media</span>
+            <input type="text" id="manual-search-input" placeholder="Video Title..." class="video-title-input">
         </div>
 
+        <!-- Main Controls -->
         <div class="card">
-            <span class="label-sm">Engine Selection</span>
+            <span class="label-sm">Engine Mode</span>
             <div class="mode-selector">
-                <button id="mode-search" class="mode-btn active">Search</button>
-                <button id="mode-ai" class="mode-btn">AI Real-time</button>
+                <button id="mode-search" class="mode-btn active">Auto Search</button>
+                <button id="mode-ai" class="mode-btn">AI Live Listen</button>
             </div>
 
+            <!-- Auto Search Settings -->
             <div id="search-settings" class="input-group">
-                <span class="label-sm">OpenSubtitles Configuration</span>
+                <span class="label-sm">OpenSubtitles API</span>
                 <div class="flex-row">
-                    <input type="password" id="os-key-input" placeholder="OpenSubtitles API Key">
+                    <input type="password" id="os-key-input" placeholder="Your API Key">
                     <button id="save-os-btn" class="save-btn">Save</button>
                 </div>
             </div>
 
+            <!-- AI Settings -->
             <div id="ai-settings" class="input-group hidden">
                 <span class="label-sm">OpenAI Configuration</span>
                 <div class="flex-row">
-                    <input type="password" id="openai-key-input" placeholder="OpenAI API Key">
+                    <input type="password" id="openai-key-input" placeholder="sk-...">
                     <button id="save-openai-btn" class="save-btn">Save</button>
                 </div>
             </div>
         </div>
 
-        <button id="find-btn" class="btn-primary">Initialize Engine</button>
-        <button id="stop-ai-btn" class="btn-primary btn-danger hidden">Relinquish Engine</button>
+        <!-- Action Buttons -->
+        <button id="find-btn" class="btn-primary">
+            <span>🚀</span> Initialize Engine
+        </button>
+        <button id="stop-ai-btn" class="btn-primary btn-danger hidden">
+            <span>⏹</span> Stop Listening
+        </button>
 
-        <div id="status">System Standby</div>
+        <div id="status">Ready to caption.</div>
     </div>
     <script src="popup.js"></script>
 </body>

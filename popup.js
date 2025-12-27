@@ -95,7 +95,7 @@ elements.modeSearch.addEventListener('click', () => {
     elements.modeAi.classList.remove('active');
     elements.aiSettings.classList.add('hidden');
     elements.searchSettings.classList.remove('hidden');
-    elements.findBtn.innerText = 'Search Subtitles';
+    elements.findBtn.innerHTML = '<span>🔍</span> Search Subtitles';
     elements.findBtn.classList.remove('hidden');
     elements.stopAiBtn.classList.add('hidden');
 });
@@ -106,7 +106,7 @@ elements.modeAi.addEventListener('click', () => {
     elements.modeSearch.classList.remove('active');
     elements.aiSettings.classList.remove('hidden');
     elements.searchSettings.classList.add('hidden');
-    elements.findBtn.innerText = 'Initialize Whisper Engine';
+    elements.findBtn.innerHTML = '<span>🚀</span> Initialize Engine';
 });
 
 // Save keys
