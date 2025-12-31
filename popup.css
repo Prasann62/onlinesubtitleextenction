@@ -228,6 +228,59 @@ input:focus {
     display: none !important;
 }
 
+/* Animations */
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 12px var(--accent-red-glow);
+    }
+
+    50% {
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
+    }
+}
+
+.app-shell {
+    animation: slideUpFade 0.4s ease-out;
+}
+
+header {
+    animation: slideUpFade 0.4s ease-out 0.05s backwards;
+}
+
+.card {
+    animation: slideUpFade 0.4s ease-out 0.1s backwards;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary {
+    animation: slideUpFade 0.4s ease-out 0.15s backwards;
+}
+
+/* Smooth fade for dynamic elements */
+.input-group {
+    animation: slideUpFade 0.3s ease-out;
+}
+
 .flex-row {
     display: flex;
     align-items: stretch;
@@ -239,4 +292,21 @@ input:focus {
     text-align: center;
     font-size: 12px;
     color: var(--text-muted);
+    animation: slideUpFade 0.4s ease-out 0.2s backwards;
+    transition: color 0.3s ease;
+}
+
+/* Button Active Press Effect */
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Mode Button Transitions */
+.mode-selector {
+    transition: background-color 0.3s ease;
+}
+
+/* AI Active Pulse */
+.btn-danger {
+    animation: slideUpFade 0.4s ease-out, pulse-glow 2s infinite;
 }
