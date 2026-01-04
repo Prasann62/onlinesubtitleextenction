@@ -1,6 +1,6 @@
 /**
- * content.js
- * Video Detection, Subtitle Injection, and Overlay Renderer
+ * content.js - Enhanced v2.1
+ * Video Detection, Subtitle Injection, Draggable Overlay & Controls
  */
 
 class SubtitleInjector {
@@ -9,17 +9,19 @@ class SubtitleInjector {
         this.overlay = null;
         this.cues = [];
         this.isListening = false;
-        this.syncOffset = 0; // Manual sync adjustment
+        this.syncOffset = 0;
+        this.fontSize = 24;
+        this.position = { bottom: 80, dragging: false };
 
         // Bind logic
         this.onTimeUpdate = this.onTimeUpdateLogic.bind(this);
+        this.onDrag = this.handleDrag.bind(this);
+        this.onDragEnd = this.handleDragEnd.bind(this);
     }
 
     findVideo() {
-        // Try to find video in main document, shadow DOMs, or accessible iframes
         this.video = this.searchForVideo(document);
         if (this.video) {
-            // Attempt to enable CORS access for captureStream (works on some hosts, fails on DRM)
             try {
                 if (!this.video.crossOrigin) this.video.crossOrigin = "anonymous";
             } catch (e) {
@@ -34,7 +36,6 @@ class SubtitleInjector {
         let video = root.querySelector('video');
         if (video) return video;
 
-        // Search Shadow DOMs
         const allElements = root.querySelectorAll('*');
         for (const el of allElements) {
             if (el.shadowRoot) {
@@ -43,7 +44,6 @@ class SubtitleInjector {
             }
         }
 
-        // Search Frames (limited by Same-Origin Policy)
         const iframes = root.querySelectorAll('iframe');
         for (const iframe of iframes) {
             try {
@@ -51,9 +51,7 @@ class SubtitleInjector {
                     video = this.searchForVideo(iframe.contentDocument);
                     if (video) return video;
                 }
-            } catch (e) {
-                // Security restrictions prevent accessing some iframes
-            }
+            } catch (e) { }
         }
         return null;
     }
@@ -63,15 +61,222 @@ class SubtitleInjector {
 
         this.overlay = document.createElement('div');
         this.overlay.id = 'ai-subtitle-overlay';
-        // Base styles moved to CSS, but specific positioning logic stays here
 
+        // Inner container
+        const container = document.createElement('div');
+        container.className = 'subtitle-container';
+
+        // Text element
         const textSpan = document.createElement('span');
         textSpan.id = 'ai-subtitle-text';
-        this.overlay.appendChild(textSpan);
+        container.appendChild(textSpan);
+
+        // Controls bar (hidden by default, shown on hover)
+        const controls = document.createElement('div');
+        controls.className = 'subtitle-controls';
+        controls.innerHTML = `
+            <button class="sub-ctrl-btn" id="sub-font-minus" title="Decrease font size">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <span class="sub-font-size" id="sub-font-display">${this.fontSize}px</span>
+            <button class="sub-ctrl-btn" id="sub-font-plus" title="Increase font size">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <div class="sub-divider"></div>
+            <button class="sub-ctrl-btn" id="sub-sync-minus" title="Subtitle earlier">
+                ⏪
+            </button>
+            <span class="sub-sync-value" id="sub-sync-display">0.0s</span>
+            <button class="sub-ctrl-btn" id="sub-sync-plus" title="Subtitle later">
+                ⏩
+            </button>
+        `;
+
+        this.overlay.appendChild(container);
+        this.overlay.appendChild(controls);
         document.body.appendChild(this.overlay);
 
-        // Keep overlay on top and positioned
+        // Add control event listeners
+        this.setupControls();
+
+        // Make draggable
+        this.makeDraggable();
+
+        // Position updates
         setInterval(() => this.repositionOverlay(), 500);
+    }
+
+    setupControls() {
+        const fontMinus = document.getElementById('sub-font-minus');
+        const fontPlus = document.getElementById('sub-font-plus');
+        const syncMinus = document.getElementById('sub-sync-minus');
+        const syncPlus = document.getElementById('sub-sync-plus');
+
+        fontMinus?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.adjustFontSize(-2);
+        });
+
+        fontPlus?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.adjustFontSize(2);
+        });
+
+        syncMinus?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.adjustSync(-0.5);
+        });
+
+        syncPlus?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.adjustSync(0.5);
+        });
+
+        // Keyboard shortcuts when video is focused
+        document.addEventListener('keydown', (e) => {
+            if (!this.video) return;
+
+            // Only if not in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        this.adjustSync(0.5);
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        this.adjustSync(-0.5);
+                    }
+                    break;
+                case '+':
+                case '=':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        this.adjustFontSize(2);
+                    }
+                    break;
+                case '-':
+                case '_':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        this.adjustFontSize(-2);
+                    }
+                    break;
+            }
+        });
+    }
+
+    adjustFontSize(delta) {
+        this.fontSize = Math.max(14, Math.min(48, this.fontSize + delta));
+        const textEl = document.getElementById('ai-subtitle-text');
+        const display = document.getElementById('sub-font-display');
+
+        if (textEl) textEl.style.fontSize = `${this.fontSize}px`;
+        if (display) display.textContent = `${this.fontSize}px`;
+
+        this.showTooltip(`Font: ${this.fontSize}px`);
+    }
+
+    adjustSync(delta) {
+        this.syncOffset = Math.round((this.syncOffset + delta) * 10) / 10;
+        this.syncOffset = Math.max(-30, Math.min(30, this.syncOffset));
+
+        const display = document.getElementById('sub-sync-display');
+        const sign = this.syncOffset >= 0 ? '+' : '';
+        if (display) display.textContent = `${sign}${this.syncOffset.toFixed(1)}s`;
+
+        // Re-sync cues
+        this.resyncCues(delta);
+
+        this.showTooltip(`Sync: ${sign}${this.syncOffset.toFixed(1)}s`);
+    }
+
+    setSync(offset) {
+        const delta = offset - this.syncOffset;
+        this.syncOffset = offset;
+
+        const display = document.getElementById('sub-sync-display');
+        const sign = this.syncOffset >= 0 ? '+' : '';
+        if (display) display.textContent = `${sign}${this.syncOffset.toFixed(1)}s`;
+
+        this.resyncCues(delta);
+    }
+
+    resyncCues(delta) {
+        this.cues = this.cues.map(cue => ({
+            ...cue,
+            start: cue.start + delta,
+            end: cue.end + delta
+        }));
+    }
+
+    showTooltip(text) {
+        let tooltip = document.getElementById('subtitle-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'subtitle-tooltip';
+            document.body.appendChild(tooltip);
+        }
+
+        tooltip.textContent = text;
+        tooltip.classList.add('visible');
+
+        clearTimeout(tooltip._hideTimer);
+        tooltip._hideTimer = setTimeout(() => {
+            tooltip.classList.remove('visible');
+        }, 1500);
+    }
+
+    makeDraggable() {
+        const overlay = this.overlay;
+        let startY = 0;
+        let startBottom = 0;
+
+        overlay.addEventListener('mousedown', (e) => {
+            // Don't drag if clicking controls
+            if (e.target.closest('.subtitle-controls')) return;
+
+            this.position.dragging = true;
+            startY = e.clientY;
+            startBottom = this.position.bottom;
+
+            overlay.style.cursor = 'grabbing';
+            overlay.classList.add('dragging');
+
+            document.addEventListener('mousemove', this.onDrag);
+            document.addEventListener('mouseup', this.onDragEnd);
+        });
+    }
+
+    handleDrag(e) {
+        if (!this.position.dragging) return;
+
+        const deltaY = this.startY - e.clientY;
+        this.position.bottom = Math.max(20, Math.min(window.innerHeight - 100, this.startBottom + deltaY));
+
+        if (this.overlay) {
+            this.overlay.style.bottom = `${this.position.bottom}px`;
+        }
+    }
+
+    handleDragEnd() {
+        this.position.dragging = false;
+        if (this.overlay) {
+            this.overlay.style.cursor = 'grab';
+            this.overlay.classList.remove('dragging');
+        }
+
+        document.removeEventListener('mousemove', this.onDrag);
+        document.removeEventListener('mouseup', this.onDragEnd);
     }
 
     repositionOverlay() {
@@ -83,28 +288,22 @@ class SubtitleInjector {
 
         const rect = this.video.getBoundingClientRect();
 
-        // If video is hidden or 0x0, hide overlay
         if (rect.width === 0 || rect.height === 0) {
             overlayEl.style.display = 'none';
             return;
         }
 
-        overlayEl.style.display = 'flex'; // Reset display
+        overlayEl.style.display = 'flex';
 
-        // Position relative to the viewport
-        // bottom 10% of the video player area
-        const bottomOffset = window.innerHeight - rect.bottom + (rect.height * 0.1);
-
-        overlayEl.style.bottom = `${Math.max(20, bottomOffset)}px`;
+        // Only reposition horizontally, keep vertical where user dragged
         overlayEl.style.left = `${rect.left + (rect.width / 2)}px`;
         overlayEl.style.transform = 'translateX(-50%)';
-        overlayEl.style.width = `${rect.width * 0.8}px`;
+        overlayEl.style.maxWidth = `${rect.width * 0.85}px`;
     }
 
     showTempMessage(text, isPersistent = false) {
         const textEl = document.getElementById('ai-subtitle-text');
         if (textEl) {
-            // Clear previous content
             textEl.innerHTML = '';
 
             if (isPersistent && text.includes('AI Mode')) {
@@ -120,7 +319,6 @@ class SubtitleInjector {
             textEl.style.opacity = '1';
 
             if (!isPersistent) {
-                // Auto hide message after 5 seconds if not a subtitle
                 setTimeout(() => {
                     if (textEl.innerText === text) {
                         textEl.style.opacity = '0';
@@ -128,7 +326,7 @@ class SubtitleInjector {
                             if (textEl.style.opacity === '0') textEl.style.display = 'none';
                         }, 300);
                     }
-                }, 5000);
+                }, 4000);
             }
         }
     }
@@ -136,49 +334,51 @@ class SubtitleInjector {
     onTimeUpdateLogic() {
         if (!this.video) return;
         const time = this.video.currentTime;
-        // Find cue that fits current time
         const currentCue = this.cues.find(c => time >= c.start && time <= c.end);
 
         const textEl = document.getElementById('ai-subtitle-text');
         if (!textEl) return;
 
         if (currentCue) {
-            textEl.innerText = currentCue.text;
-            textEl.style.display = 'inline-block';
+            if (textEl.innerText !== currentCue.text) {
+                // Fade transition
+                textEl.style.opacity = '0';
+                setTimeout(() => {
+                    textEl.innerText = currentCue.text;
+                    textEl.style.display = 'inline-block';
+                    textEl.style.opacity = '1';
+                }, 100);
+            }
         } else {
-            // Only hide if we aren't showing a status message
             textEl.style.display = 'none';
         }
     }
 
-    injectSubtitle(content, offset = 0) {
+    injectSubtitle(content, syncOffsetFromPopup = 0) {
         if (!this.video) this.findVideo();
         if (!this.video) return;
 
-        console.log(`[Subtitle] Injecting ${content.length} chars at offset ${offset}`);
-        const newCues = this.parseSubtitles(content, offset);
-
-        if (offset > 0) {
-            // Append new cues to existing ones, remove overlaps
-            this.cues = [...this.cues.filter(c => c.end < offset), ...newCues];
-        } else {
-            this.cues = newCues;
+        // Set sync offset if provided
+        if (syncOffsetFromPopup !== 0) {
+            this.setSync(syncOffsetFromPopup);
         }
+
+        console.log(`[Subtitle] Injecting ${content.length} chars`);
+        this.cues = this.parseSubtitles(content);
 
         const textEl = document.getElementById('ai-subtitle-text');
         if (textEl) textEl.style.opacity = '1';
 
         this.video.removeEventListener('timeupdate', this.onTimeUpdate);
         this.video.addEventListener('timeupdate', this.onTimeUpdate);
+
+        this.showTempMessage('✅ Subtitles loaded!');
     }
 
-    parseSubtitles(content, offset = 0) {
-        // Simple VTT/SRT Parser
+    parseSubtitles(content) {
         const cues = [];
-        // Normalize newlines
         const cleanContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         const blocks = cleanContent.split(/\n\n+/);
-
         const timeRegex = /((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}) --> ((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})/;
 
         for (const block of blocks) {
@@ -187,21 +387,21 @@ class SubtitleInjector {
             let textLines = [];
 
             for (const line of lines) {
-                // Skip WEBVTT header or index numbers
                 if (line.includes('WEBVTT') || line.match(/^\d+$/)) continue;
 
                 const match = line.match(timeRegex);
                 if (match) {
                     timeMatch = match;
                 } else if (line.trim()) {
-                    textLines.push(line.trim());
+                    // Remove HTML tags from subtitle text
+                    textLines.push(line.trim().replace(/<[^>]+>/g, ''));
                 }
             }
 
             if (timeMatch && textLines.length > 0) {
                 cues.push({
-                    start: this.parseTime(timeMatch[1]) + offset + this.syncOffset,
-                    end: this.parseTime(timeMatch[2]) + offset + this.syncOffset,
+                    start: this.parseTime(timeMatch[1]) + this.syncOffset,
+                    end: this.parseTime(timeMatch[2]) + this.syncOffset,
                     text: textLines.join('\n')
                 });
             }
@@ -210,7 +410,6 @@ class SubtitleInjector {
     }
 
     parseTime(timeStr) {
-        // Handles MM:SS.mmm or HH:MM:SS.mmm
         const parts = timeStr.replace(',', '.').split(':').reverse();
         let seconds = parseFloat(parts[0]) || 0;
         let minutes = parseInt(parts[1]) || 0;
@@ -230,21 +429,24 @@ class SubtitleInjector {
     }
 
     cleanTitle(title) {
-        // Prioritize JAV ID format: ABC-123
-        const javRegex = /([a-zA-Z]{2,6}-?\d{3,4})/;
-        const match = title.match(javRegex);
-        if (match) return match[1].toUpperCase();
+        // Try to extract movie/show title patterns
+        const patterns = [
+            /([a-zA-Z]{2,6}-?\d{3,4})/i, // JAV pattern
+            /^(.+?)\s*[-–|]\s*(?:Watch|Stream|Online|Free|HD)/i, // "Title - Watch Online"
+            /^(.+?)\s*\(\d{4}\)/i, // "Title (2024)"
+        ];
+
+        for (const pattern of patterns) {
+            const match = title.match(pattern);
+            if (match) return match[1].trim();
+        }
 
         // Fallback cleanup
-        return title.replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
-    }
-
-    // --- AI AUDIO CAPTURE REMOVED (Moved to Offscreen) ---
-
-    setSync(seconds) {
-        this.syncOffset += seconds;
-        console.log(`[Subtitle] Sync Adjusted: ${this.syncOffset}s`);
-        this.showTempMessage(`Sync: ${this.syncOffset > 0 ? '+' : ''}${this.syncOffset}s`);
+        return title
+            .replace(/\[.*?\]/g, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/[-–|].+$/, '')
+            .trim();
     }
 
     stopCapture() {
@@ -257,45 +459,51 @@ class SubtitleInjector {
 
 // Singleton
 const injector = new SubtitleInjector();
-window._aiSubtitleInjector = injector; // Expose for popup probing
+window._aiSubtitleInjector = injector;
 
-// Auto-check for video on load and mutations to support iframes detection
+// Auto-check for video
 function aggressiveVideoCheck() {
     const v = injector.findVideo();
     if (v) console.log('[Content] Video found in frame:', window.location.href);
 }
 
-// Check on load
 aggressiveVideoCheck();
 
-// Check on DOM mutations (for dynamic frameworks)
+// DOM mutation observer
 const observer = new MutationObserver((mutations) => {
     if (!injector.video) aggressiveVideoCheck();
 });
 observer.observe(document.body, { childList: true, subtree: true });
 
-
+// Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
         if (message.action === 'GET_VIDEO_METADATA') {
-            // If we don't have a video, return null so popup ignores this frame
             if (!injector.findVideo()) {
                 sendResponse(null);
                 return;
             }
             sendResponse(injector.getVideoMetadata());
+
         } else if (message.action === 'INJECT_SUBTITLE') {
-            injector.injectSubtitle(message.content);
+            injector.injectSubtitle(message.content, message.syncOffset || 0);
             sendResponse({ success: true });
+
+        } else if (message.action === 'SET_SYNC_OFFSET') {
+            injector.setSync(message.offset);
+            sendResponse({ success: true });
+
         } else if (message.action === 'START_RECORDING' || message.action === 'AI_MODE_STARTED') {
             if (injector.video) {
                 injector.isListening = true;
                 injector.showTempMessage('🎙️ AI Mode: Listening...', true);
             }
             sendResponse({ success: true });
+
         } else if (message.action === 'STOP_RECORDING') {
             injector.stopCapture();
             sendResponse({ success: true });
+
         } else if (message.action === 'UPDATE_AI_SUBTITLES') {
             if (injector.video) {
                 injector.injectSubtitle(message.content, message.offset);
@@ -306,5 +514,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.error("Content Script Error:", e);
         sendResponse({ success: false, error: e.message });
     }
-    // Return true only if async response is needed (not needed here mostly)
 });

@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "AI Subtitle Search (OpenSubtitles)",
-    "version": "2.0.1",
-    "description": "Automatically find and display subtitles for any video using OpenSubtitles.com REST API or AI.",
+    "name": "NextSub AI - Smart Subtitle Finder",
+    "version": "2.1.0",
+    "description": "Find subtitles instantly with YIFY database or AI transcription. Features draggable overlay, sync controls, multi-language support, and premium UI.",
     "permissions": [
         "activeTab",
         "scripting",
