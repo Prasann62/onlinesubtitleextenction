@@ -4,6 +4,8 @@ A powerful Chrome extension that automatically finds and displays subtitles for 
 
 ![Version](https://img.shields.io/badge/version-2.1.0-6366f1)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Chrome](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)
+![Manifest](https://img.shields.io/badge/Manifest-V3-orange)
 
 ## ✨ Features
 
@@ -117,10 +119,31 @@ The extension features a **premium dark theme** with:
 - YIFY subtitle database integration
 - Local Whisper AI transcription
 
+## 👤 Author
+
+**Prasanna Kumar**
+
+- GitHub: [@Prasann62](https://github.com/Prasann62)
+- Repository: [onlinesubtitleextenction](https://github.com/Prasann62/onlinesubtitleextenction)
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## ⭐ Show Your Support
+
+Give a ⭐ if this project helped you!
+
 ## 📄 License
 
 MIT License - Feel free to modify and distribute.
 
 ---
 
-Made with ❤️ for seamless video watching
+Made with ❤️ by Prasanna Kumar for seamless video watching
