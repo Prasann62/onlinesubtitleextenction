@@ -455,6 +455,26 @@ class SubtitleInjector {
         if (textEl) textEl.style.display = 'none';
         console.log('[AI] Display stopped.');
     }
+
+    async togglePiP() {
+        if (!this.video) this.findVideo();
+        if (!this.video) {
+            console.log('[PiP] No video found');
+            return false;
+        }
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await this.video.requestPictureInPicture();
+            }
+            return true;
+        } catch (err) {
+            console.error('[PiP] Error:', err);
+            return false;
+        }
+    }
 }
 
 // Singleton
@@ -509,6 +529,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 injector.injectSubtitle(message.content, message.offset);
             }
             sendResponse({ success: true });
+
+        } else if (message.action === 'TOGGLE_PIP') {
+            injector.togglePiP().then(success => {
+                sendResponse({ success });
+            });
+            return true; // Keep channel open for async response
         }
     } catch (e) {
         console.error("Content Script Error:", e);

@@ -6,6 +6,7 @@
 const elements = {
     findBtn: document.getElementById('find-btn'),
     stopAiBtn: document.getElementById('stop-ai-btn'),
+    miniplayBtn: document.getElementById('miniplay-btn'),
     status: document.getElementById('status'),
     videoInfo: document.getElementById('video-info'),
     manualSearchInput: document.getElementById('manual-search-input'),
@@ -362,6 +363,15 @@ elements.stopAiBtn.addEventListener('click', () => {
     updateStatus('AI stopped', 'ready');
     showToast('AI transcription stopped', 'success');
     chrome.runtime.sendMessage({ action: 'STOP_AI_MODE' });
+});
+
+// Miniplay
+elements.miniplayBtn.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+        if (tab) {
+            chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_PIP' }, { frameId: currentFrameId });
+        }
+    });
 });
 
 // Sync Controls
