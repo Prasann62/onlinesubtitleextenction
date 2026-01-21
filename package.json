@@ -1,0 +1,27 @@
+{
+  "name": "extenction",
+  "version": "1.0.0",
+  "description": "A powerful Chrome extension that automatically finds and displays subtitles for any video. Supports both **YIFY database search** and **AI-powered live transcription**.",
+  "main": "background.js",
+  "scripts": {
+    "build": "npx tailwindcss -i ./input.css -o ./popup.css",
+    "watch": "npx tailwindcss -i ./input.css -o ./popup.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prasann62/onlinesubtitleextenction.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Prasann62/onlinesubtitleextenction/issues"
+  },
+  "homepage": "https://github.com/Prasann62/onlinesubtitleextenction#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19"
+  }
+}

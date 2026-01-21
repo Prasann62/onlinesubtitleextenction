@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* JS Compatibility classes */
+.view-section {
+    display: none;
+}
+
+.view-section.active {
+    display: block;
+}
+
+/* Mode tab active state handled via opacity/color elsewhere or here */
+#mode-search.active,
+#mode-ai.active {
+    color: #050505;
+    /* bg-dark */
+}
