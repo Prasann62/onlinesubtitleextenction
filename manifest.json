@@ -1,27 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "NextSub AI - Smart Subtitle Finder",
-    "version": "2.1.0",
-    "description": "Find subtitles instantly with YIFY database or AI transcription. Features draggable overlay, sync controls, multi-language support, and premium UI.",
+    "name": "Brave Mini Player",
+    "version": "1.0.0",
+    "description": "Premium Mini Player and Picture-in-Picture for any website video. Focused on privacy and performance.",
     "permissions": [
-        "activeTab",
         "scripting",
-        "storage",
-        "webRequest",
-        "tabCapture",
-        "offscreen"
-    ],
-    "host_permissions": [
-        "<all_urls>",
-        "https://api.opensubtitles.com/*",
-        "https://www.opensubtitles.com/*",
-        "https://api.openai.com/*"
+        "storage"
     ],
     "action": {
         "default_popup": "popup.html"
-    },
-    "background": {
-        "service_worker": "background.js"
     },
     "content_scripts": [
         {
@@ -29,26 +16,15 @@
                 "<all_urls>"
             ],
             "js": [
+                "pipController.js",
+                "miniPlayer.js",
                 "content.js"
-            ],
-            "css": [
-                "style.css"
             ],
             "all_frames": true,
             "run_at": "document_end"
         }
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
-    },
-    "web_accessible_resources": [
-        {
-            "resources": [
-                "worker.js"
-            ],
-            "matches": [
-                "<all_urls>"
-            ]
-        }
-    ]
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
 }
