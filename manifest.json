@@ -5,13 +5,25 @@
     "description": "Mini player and Picture-in-Picture for any website",
     "permissions": [
         "scripting",
-        "activeTab"
+        "activeTab",
+        "contextMenus"
     ],
     "host_permissions": [
         "<all_urls>"
     ],
     "action": {
         "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "commands": {
+        "toggle-pip": {
+            "suggested_key": {
+                "default": "Alt+P"
+            },
+            "description": "Toggle Picture-in-Picture"
+        }
     },
     "content_scripts": [
         {

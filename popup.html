@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 
-<body style="font-family:sans-serif;padding:10px;width:200px;background:#0f0f12;color:white;">
+<body
+    style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:15px;width:220px;background:#0f0f12;color:white;margin:0;">
+    <h3 style="margin-top:0;font-size:16px;color:#3b82f6;">PiP Controller</h3>
     <button id="pipBtn"
-        style="width:100%;padding:10px;cursor:pointer;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:bold;">
-        Toggle Picture-in-Picture
+        style="width:100%;padding:10px;cursor:pointer;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:bold;margin-bottom:10px;transition:background 0.2s;">
+        Toggle PiP
     </button>
+    <div id="videoListContainer" style="display:none;">
+        <p style="font-size:12px;color:#aaa;margin-bottom:8px;">Multiple videos detected:</p>
+        <div id="videoList" style="display:flex;flex-direction:column;gap:5px;"></div>
+    </div>
     <script src="popup.js"></script>
 </body>
 
