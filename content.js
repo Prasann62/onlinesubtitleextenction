@@ -64,6 +64,11 @@ async function requestDocumentPiP(video) {
     if (!('documentPictureInPicture' in window)) return false;
 
     try {
+        // Save original styles and state
+        const originalStyle = video.getAttribute("style") || "";
+        const originalParent = video.parentElement;
+        const originalNextSibling = video.nextSibling;
+
         const pipWindow = await window.documentPictureInPicture.requestWindow({
             width: video.videoWidth || 640,
             height: video.videoHeight || 360,
@@ -80,18 +85,27 @@ async function requestDocumentPiP(video) {
         // Create a container for video and custom controls
         const container = document.createElement("div");
         container.style.position = "relative";
-        container.style.width = "100%";
-        container.style.height = "100%";
+        container.style.width = "100vw";
+        container.style.height = "100vh";
+        container.style.display = "flex";
+        container.style.alignItems = "center";
+        container.style.justifyContent = "center";
+
+        // Apply override styles to the video to force it to fit
+        video.style.setProperty("width", "100%", "important");
+        video.style.setProperty("height", "100%", "important");
+        video.style.setProperty("position", "relative", "important");
+        video.style.setProperty("left", "0", "important");
+        video.style.setProperty("top", "0", "important");
+        video.style.setProperty("object-fit", "contain", "important");
 
         // Move video to PiP
-        const originalParent = video.parentElement;
-        const originalNextSibling = video.nextSibling;
         container.appendChild(video);
         pipWindow.document.body.appendChild(container);
 
         // Custom Overlay for Controls (Simplified)
         const overlay = document.createElement("div");
-        overlay.style.cssText = "position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:none;gap:15px;background:rgba(0,0,0,0.6);padding:10px 20px;border-radius:30px;transition:opacity 0.2s;backdrop-filter:blur(5px);";
+        overlay.style.cssText = "position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:none;gap:15px;background:rgba(0,0,0,0.6);padding:10px 20px;border-radius:30px;transition:opacity 0.2s;backdrop-filter:blur(5px);z-index:1000;";
         overlay.innerHTML = `
             <button id="rewind" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;">⏪</button>
             <button id="playPause" style="background:none;border:none;color:white;cursor:pointer;font-size:24px;">${video.paused ? '▶️' : '⏸️'}</button>
@@ -112,6 +126,14 @@ async function requestDocumentPiP(video) {
 
         // Restore video on close
         pipWindow.addEventListener("pagehide", () => {
+            // Restore original styles
+            if (originalStyle) {
+                video.setAttribute("style", originalStyle);
+            } else {
+                video.removeAttribute("style");
+            }
+
+            // Move back to original position
             if (originalNextSibling) {
                 originalParent.insertBefore(video, originalNextSibling);
             } else {
