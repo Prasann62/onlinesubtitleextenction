@@ -23,6 +23,12 @@
                 "default": "Alt+P"
             },
             "description": "Toggle Picture-in-Picture"
+        },
+        "close-pip": {
+            "suggested_key": {
+                "default": "Alt+X"
+            },
+            "description": "Close Picture-in-Picture"
         }
     },
     "content_scripts": [

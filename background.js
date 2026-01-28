@@ -13,14 +13,31 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-    if (command === "toggle-pip") {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const tab = tabs[0];
-            if (!tab) return;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (!tab) return;
+
+        if (command === "toggle-pip") {
             triggerPiP(tab.id);
-        });
-    }
+        } else if (command === "close-pip") {
+            closePiP(tab.id);
+        }
+    });
 });
+
+function closePiP(tabId) {
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        func: async () => {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            }
+            // If Document PiP is active, we need to close that window as well
+            // This will be handled in content.js via a message or global state
+            window.postMessage({ type: "CLOSE_PIP" }, "*");
+        }
+    });
+}
 
 function triggerPiP(tabId) {
     chrome.scripting.executeScript({

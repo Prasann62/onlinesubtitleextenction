@@ -142,10 +142,92 @@ async function requestDocumentPiP(video) {
         }, { once: true });
 
         return true;
+        // Detect resize and move shortcuts for Document PiP
+        pipWindow.addEventListener("keydown", (e) => {
+            if (e.altKey) {
+                switch (e.key) {
+                    case "+":
+                    case "=":
+                        pipWindow.resizeBy(20, 20);
+                        break;
+                    case "-":
+                        pipWindow.resizeBy(-20, -20);
+                        break;
+                    case "ArrowUp":
+                        pipWindow.moveBy(0, -20);
+                        break;
+                    case "ArrowDown":
+                        pipWindow.moveBy(0, 20);
+                        break;
+                    case "ArrowLeft":
+                        pipWindow.moveBy(-20, 0);
+                        break;
+                    case "ArrowRight":
+                        pipWindow.moveBy(20, 0);
+                        break;
+                    case "x":
+                    case "X":
+                        pipWindow.close();
+                        break;
+                }
+            }
+        });
+
+        // Handle close from background
+        window.addEventListener("message", (e) => {
+            if (e.data.type === "CLOSE_PIP") {
+                pipWindow.close();
+            }
+        });
+
+        return true;
     } catch (e) {
         console.error("Document PiP failed:", e);
         return false;
     }
+}
+
+// Help Tooltip UI
+function toggleHelpTooltip() {
+    let help = document.getElementById("pip-help-tooltip");
+    if (help) {
+        help.remove();
+        return;
+    }
+
+    help = document.createElement("div");
+    help.id = "pip-help-tooltip";
+    help.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 12px;
+        z-index: 1000000;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        line-height: 1.6;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+    `;
+    help.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 4px;">⌨️ Keyboard Shortcuts</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
+            <span>Toggle PiP</span> <span style="color: #aaa;">Alt + P</span>
+            <span>Close PiP</span> <span style="color: #aaa;">Alt + X</span>
+            <span>Play/Pause</span> <span style="color: #aaa;">Space</span>
+            <span>Mute/Unmute</span> <span style="color: #aaa;">M</span>
+            <span>Seek</span> <span style="color: #aaa;">← / →</span>
+            <span>Resize</span> <span style="color: #aaa;">Alt ±</span>
+            <span>Move</span> <span style="color: #aaa;">Alt Arw</span>
+            <span>Help</span> <span style="color: #aaa;">H</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; color: #888; text-align: center;">Press 'H' to hide</div>
+    `;
+    document.body.appendChild(help);
 }
 
 
@@ -166,9 +248,10 @@ window.addEventListener("keydown", (e) => {
             showToast(video.muted ? "Muted 🔇" : "Unmuted 🔊");
             break;
         case " ":
-            e.preventDefault(); // Prevent scroll
+            // Only toggle if video is present and we are not in an input
+            e.preventDefault();
             if (video.paused) {
-                video.play();
+                video.play().catch(() => { });
                 showToast("Playing ▶️");
             } else {
                 video.pause();
@@ -183,6 +266,28 @@ window.addEventListener("keydown", (e) => {
             video.currentTime = Math.min(video.duration, video.currentTime + 5);
             showToast("Forward 5s ⏩");
             break;
+        case "h":
+            toggleHelpTooltip();
+            break;
+        case "x":
+            if (e.altKey) {
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                }
+                window.postMessage({ type: "CLOSE_PIP" }, "*");
+            }
+            break;
+        case "p":
+            // Alt + P is usually handled by chrome.commands, but we can double handle here for responsiveness if wanted
+            // but manifest command is safer.
+            break;
+    }
+});
+
+// Listener for background messages
+window.addEventListener("message", (e) => {
+    if (e.data.type === "CLOSE_PIP" && document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(() => { });
     }
 });
 
