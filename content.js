@@ -1,4 +1,51 @@
+// Navigation tracking
+let currentVideos = [];
+let currentIndex = -1;
+
+function updateVideoIndex() {
+    const isYouTubeShorts = location.href.includes("youtube.com/shorts");
+    const isInstagramReels = location.href.includes("/reels/") || location.href.includes("/reel/");
+
+    if (isYouTubeShorts || isInstagramReels) {
+        currentVideos = Array.from(document.querySelectorAll("video")).filter(v => v.readyState >= 2);
+        const activeVideo = document.querySelector('video[style*="object-fit: cover"]') || document.querySelector('video');
+        currentIndex = currentVideos.indexOf(activeVideo);
+    }
+}
+
+async function playNext() {
+    updateVideoIndex();
+    if (currentIndex < currentVideos.length - 1) {
+        const nextVideo = currentVideos[currentIndex + 1];
+        if (document.pictureInPictureElement) {
+            await nextVideo.requestPictureInPicture();
+        }
+        nextVideo.play();
+        showToast("Next Short ⬇️");
+    }
+}
+
+async function playPrev() {
+    updateVideoIndex();
+    if (currentIndex > 0) {
+        const prevVideo = currentVideos[currentIndex - 1];
+        if (document.pictureInPictureElement) {
+            await prevVideo.requestPictureInPicture();
+        }
+        prevVideo.play();
+        showToast("Previous Short ⬆️");
+    }
+}
+
+function setupMediaSession() {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('nexttrack', playNext);
+        navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+    }
+}
+
 // Toast UI Helper
+
 function showToast(message) {
     let toast = document.getElementById("pip-toast");
     if (!toast) {
@@ -6,18 +53,22 @@ function showToast(message) {
         toast.id = "pip-toast";
         toast.style.cssText = `
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            z-index: 999999;
-            font-family: sans-serif;
+            background: rgba(10, 10, 12, 0.9);
+            color: #f8fafc;
+            padding: 10px 24px;
+            border-radius: 30px;
+            z-index: 2147483647;
+            font-family: 'Outfit', sans-serif;
             font-size: 14px;
+            font-weight: 600;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
         `;
         document.body.appendChild(toast);
     }
@@ -41,6 +92,7 @@ function enablePiP(video) {
                 await document.exitPictureInPicture();
             } else {
                 await video.requestPictureInPicture();
+                setupMediaSession();
             }
         } catch (e) {
             console.error("PiP error:", e);
@@ -50,6 +102,7 @@ function enablePiP(video) {
     // PiP Event Hooks
     video.addEventListener("enterpictureinpicture", () => {
         showToast("PiP Mode Enabled 📺");
+        setupMediaSession();
     });
 
     video.addEventListener("leavepictureinpicture", () => {
@@ -201,31 +254,33 @@ function toggleHelpTooltip() {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 15px;
-        border-radius: 12px;
-        z-index: 1000000;
-        font-family: 'Inter', sans-serif;
+        background: rgba(10, 10, 12, 0.95);
+        color: #f8fafc;
+        padding: 20px;
+        border-radius: 16px;
+        z-index: 2147483647;
+        font-family: 'Outfit', sans-serif;
         font-size: 13px;
         line-height: 1.6;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         border: 1px solid rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
     `;
     help.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 4px;">⌨️ Keyboard Shortcuts</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
-            <span>Toggle PiP</span> <span style="color: #aaa;">Alt + P</span>
-            <span>Close PiP</span> <span style="color: #aaa;">Alt + X</span>
-            <span>Play/Pause</span> <span style="color: #aaa;">Space</span>
-            <span>Mute/Unmute</span> <span style="color: #aaa;">M</span>
-            <span>Seek</span> <span style="color: #aaa;">← / →</span>
-            <span>Resize</span> <span style="color: #aaa;">Alt ±</span>
-            <span>Move</span> <span style="color: #aaa;">Alt Arw</span>
-            <span>Help</span> <span style="color: #aaa;">H</span>
+        <div style="font-weight: 700; font-size: 16px; color: #c5a059; margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <span>⌨️</span> Shortcuts
         </div>
-        <div style="margin-top: 8px; font-size: 11px; color: #888; text-align: center;">Press 'H' to hide</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px;">
+            <span>Toggle PiP</span> <span style="color: #6366f1; font-weight: 500;">Alt + P</span>
+            <span>Close PiP</span> <span style="color: #6366f1; font-weight: 500;">Alt + X</span>
+            <span>Play/Pause</span> <span style="color: #6366f1; font-weight: 500;">Space</span>
+            <span>Mute/Unmute</span> <span style="color: #6366f1; font-weight: 500;">M</span>
+            <span>Seek 5s</span> <span style="color: #6366f1; font-weight: 500;">← / →</span>
+            <span>Resize</span> <span style="color: #6366f1; font-weight: 500;">Alt ±</span>
+            <span>Move</span> <span style="color: #6366f1; font-weight: 500;">Alt Arw</span>
+            <span>Help</span> <span style="color: #6366f1; font-weight: 500;">H</span>
+        </div>
+        <div style="margin-top: 12px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">Press 'H' to dismiss</div>
     `;
     document.body.appendChild(help);
 }
@@ -280,6 +335,16 @@ window.addEventListener("keydown", (e) => {
         case "p":
             // Alt + P is usually handled by chrome.commands, but we can double handle here for responsiveness if wanted
             // but manifest command is safer.
+            break;
+        case "arrowdown":
+            if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
+                playNext();
+            }
+            break;
+        case "arrowup":
+            if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
+                playPrev();
+            }
             break;
     }
 });

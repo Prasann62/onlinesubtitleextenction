@@ -1,0 +1,132 @@
+/* Stitch Design System - Premium & Tailored Aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* Color Palette */
+    --stitch-bg: #0a0a0c;
+    --stitch-surface: #121216;
+    --stitch-accent: #6366f1; /* Indigo */
+    --stitch-accent-soft: rgba(99, 102, 241, 0.1);
+    --stitch-gold: #c5a059;
+    --stitch-gold-soft: rgba(197, 160, 89, 0.1);
+    --stitch-text: #f8fafc;
+    --stitch-text-muted: #94a3b8;
+    --stitch-border: rgba(255, 255, 255, 0.08);
+    
+    /* Stitching Effect */
+    --stitch-dash: 1px dashed var(--stitch-border);
+    --stitch-dash-gold: 1px dashed var(--stitch-gold);
+    
+    /* Shadows */
+    --stitch-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --stitch-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+body {
+    background: var(--stitch-bg);
+    color: var(--stitch-text);
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+.stitch-card {
+    background: var(--stitch-surface);
+    border: 1px solid var(--stitch-border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    box-shadow: var(--stitch-shadow);
+    overflow: hidden;
+}
+
+.stitch-card::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border: var(--stitch-dash);
+    border-radius: 10px;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.stitch-btn {
+    background: var(--stitch-accent);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+}
+
+.stitch-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: var(--stitch-glow);
+}
+
+.stitch-btn:active {
+    transform: translateY(0);
+}
+
+.stitch-btn-outline {
+    background: transparent;
+    border: 1px solid var(--stitch-accent);
+    color: var(--stitch-accent);
+}
+
+.stitch-btn-gold {
+    background: var(--stitch-gold);
+    color: var(--stitch-bg);
+}
+
+.stitch-header {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--stitch-gold);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stitch-divider {
+    height: 1px;
+    background: var(--stitch-border);
+    margin: 16px 0;
+    position: relative;
+}
+
+.stitch-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: var(--stitch-dash);
+    transform: translateY(-50%);
+    opacity: 0.3;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease forwards;
+}

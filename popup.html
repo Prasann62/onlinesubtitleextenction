@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html>
 
-<body
-    style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:15px;width:220px;background:#0f0f12;color:white;margin:0;">
-    <h3 style="margin-top:0;font-size:16px;color:#3b82f6;">PiP Controller</h3>
-    <button id="pipBtn"
-        style="width:100%;padding:10px;cursor:pointer;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:bold;margin-bottom:10px;transition:background 0.2s;">
-        Toggle PiP
-    </button>
-    <div id="videoListContainer" style="display:none;">
-        <p style="font-size:12px;color:#aaa;margin-bottom:8px;">Multiple videos detected:</p>
-        <div id="videoList" style="display:flex;flex-direction:column;gap:5px;"></div>
-    </div>
-    <div id="statusMsg"
-        style="display:none;margin-top:10px;padding:10px;background:rgba(239, 68, 68, 0.1);border:1px solid rgba(239, 68, 68, 0.2);border-radius:8px;font-size:12px;color:#f87171;line-height:1.4;">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="stitch.css">
+    <style>
+        body {
+            width: 280px;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+
+<body class="animate-in">
+    <div class="stitch-card">
+        <div class="stitch-header">
+            <span style="font-size: 20px;">🎬</span>
+            PiP Controller
+        </div>
+
+        <button id="pipBtn" class="stitch-btn" style="width: 100%; margin-bottom: 12px;">
+            <span>📺</span> Toggle Picture-in-Picture
+        </button>
+
+        <div id="videoListContainer" style="display:none;">
+            <div class="stitch-divider"></div>
+            <p style="font-size:11px; color:var(--stitch-text-muted); margin-bottom:8px; font-weight: 500;">Multiple
+                videos detected:</p>
+            <div id="videoList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <div id="statusMsg"
+            style="display:none; margin-top:12px; padding:10px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); border-radius:8px; font-size:11px; color:#f87171; line-height:1.4;">
+        </div>
     </div>
     <script src="popup.js"></script>
 </body>

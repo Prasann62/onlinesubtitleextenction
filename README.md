@@ -23,6 +23,7 @@ Built to be **fast, privacy-friendly, and Brave-safe**.
   - Double-click on video → Toggle PiP
   - Extension popup button → Toggle PiP
   - Auto-detects playing videos
+  - 🔄 **Shorts Navigation in PiP**: Navigate YouTube Shorts and Instagram Reels directly inside PiP using Next/Previous controls.
 
 - 🦁 **Brave Optimized**
   - No tracking

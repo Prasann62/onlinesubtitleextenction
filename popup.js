@@ -6,15 +6,14 @@ const statusMsg = document.getElementById("statusMsg");
 function showStatus(msg, isError = true) {
     statusMsg.textContent = msg;
     statusMsg.style.display = "block";
-    statusMsg.style.background = isError ? "rgba(239, 68, 68, 0.1)" : "rgba(59, 130, 246, 0.1)";
-    statusMsg.style.color = isError ? "#f87171" : "#60a5fa";
-    statusMsg.style.borderColor = isError ? "rgba(239, 68, 68, 0.2)" : "rgba(59, 130, 246, 0.2)";
+    statusMsg.style.background = isError ? "rgba(239, 68, 68, 0.1)" : "rgba(99, 102, 241, 0.1)";
+    statusMsg.style.color = isError ? "#f87171" : "#6366f1";
+    statusMsg.style.borderColor = isError ? "rgba(239, 68, 68, 0.2)" : "rgba(99, 102, 241, 0.2)";
 }
 
 async function init() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // Detect videos and potential blockers
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
@@ -37,12 +36,9 @@ async function init() {
         const { videos, hasIframes, hasCanvas } = results[0].result;
 
         if (videos.length === 0) {
-            let msg = "No HTML5 video detected on this page.";
-            if (hasIframes) {
-                msg += "\n\nNote: This site uses iframes. The video might be inside a restricted cross-origin frame which extensions cannot access.";
-            } else if (hasCanvas) {
-                msg += "\n\nNote: This site may be using a custom canvas-based renderer which doesn't support standard PiP.";
-            }
+            let msg = "No HTML5 video detected.";
+            if (hasIframes) msg += " (Inside iframe)";
+            else if (hasCanvas) msg += " (Canvas based)";
             showStatus(msg);
             pipBtn.style.opacity = "0.5";
             pipBtn.disabled = true;
@@ -51,7 +47,8 @@ async function init() {
             videoList.innerHTML = "";
             videos.forEach(v => {
                 const btn = document.createElement("button");
-                btn.style.cssText = "width:100%;padding:8px;background:#27272a;color:white;border:none;border-radius:6px;font-size:11px;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+                btn.className = "stitch-btn stitch-btn-outline";
+                btn.style.cssText = "width:100%; padding:8px; font-size:11px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-style: dashed;";
                 btn.textContent = `Video ${v.id + 1}: ${v.currentSrc.split('/').pop() || 'Blob/Stream'}`;
                 btn.onclick = () => triggerPiPForIndex(tab.id, v.id);
                 videoList.appendChild(btn);
@@ -62,7 +59,7 @@ async function init() {
 
 pipBtn.addEventListener("click", async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    triggerPiPForIndex(tab.id, 0); // Default to first video
+    triggerPiPForIndex(tab.id, 0);
 });
 
 function triggerPiPForIndex(tabId, index) {
@@ -90,7 +87,7 @@ function triggerPiPForIndex(tabId, index) {
     }, (results) => {
         const res = results[0].result;
         if (res && !res.success) {
-            showStatus(`PiP Failed: ${res.error}. This site might have blocked PiP via DRM or other browser restrictions.`);
+            showStatus(`PiP Failed: ${res.error}`);
         }
     });
 }
