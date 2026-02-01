@@ -70,6 +70,18 @@ function showToast(message) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
         `;
+
+        // Stitch effect
+        const stitch = document.createElement("div");
+        stitch.style.cssText = `
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 26px;
+            pointer-events: none;
+        `;
+        toast.appendChild(stitch);
+
         document.body.appendChild(toast);
     }
     toast.textContent = message;
@@ -111,6 +123,109 @@ function enablePiP(video) {
 
     // Document PiP Support (Advanced)
     video.dataset.docPipSupported = 'documentPictureInPicture' in window;
+}
+
+// 🚀 Robust YouTube Button Injection
+function handleYouTubeInjection() {
+    if (!location.href.includes("youtube.com")) return;
+
+    // Find all potential control bars (YouTube sometimes has multiple or swaps them)
+    const controlBars = document.querySelectorAll(".ytp-right-controls");
+    const video = document.querySelector("video");
+
+    if (video && controlBars.length > 0) {
+        controlBars.forEach(bar => {
+            if (!bar.querySelector(".pip-yt-button")) {
+                injectYouTubeButton(video, bar);
+            }
+        });
+    }
+}
+
+function injectYouTubeButton(video, controls) {
+    if (!controls) return;
+
+    const button = document.createElement("button");
+    button.className = "ytp-button pip-yt-button";
+    button.setAttribute("aria-label", "Picture-in-Picture");
+    button.title = "Picture-in-Picture (Alt+P)";
+
+    // Ensure styles are injected
+    if (!document.getElementById("pip-yt-style")) {
+        const style = document.createElement("style");
+        style.id = "pip-yt-style";
+        style.textContent = `
+            .pip-yt-button {
+                display: inline-block !important;
+                position: relative !important;
+                width: 48px !important;
+                height: 100% !important;
+                vertical-align: top !important;
+                transition: background 0.2s, transform 0.2s !important;
+                cursor: pointer !important;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                outline: none !important;
+            }
+            .pip-yt-button:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+                border-radius: 50% !important;
+            }
+            .pip-yt-button svg {
+                width: 100% !important;
+                height: 100% !important;
+                pointer-events: none !important;
+                transform: scale(0.65) !important; /* Scale path to fit YouTube button size */
+            }
+            .pip-yt-button:hover svg path {
+                fill: #6366f1 !important; /* Stitch Indigo */
+                filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5));
+            }
+            .pip-yt-button:hover::after {
+                content: '';
+                position: absolute;
+                top: 10px; left: 10px; right: 10px; bottom: 10px;
+                border: 1px dashed rgba(255, 255, 255, 0.4);
+                border-radius: 4px;
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    button.innerHTML = `
+        <svg viewBox="0 0 36 36" width="100%" height="100%">
+            <path d="M25,17 L17,17 L17,23 L25,23 L25,17 Z M29,25 L29,10.98 C29,9.88 28.1,9 27,9 L9,9 C7.9,9 7,9.88 7,10.98 L7,25 C7,26.1 7.9,27 9,27 L27,27 C28.1,27 29,26.1 29,25 Z M27,25 L9,25 L9,10.98 L27,10.98 L27,25 Z" fill="#fff"></path>
+        </svg>
+    `;
+
+    button.onclick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const activeVideo = document.querySelector("video.html5-main-video") || document.querySelector("video");
+        if (!activeVideo) return;
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await activeVideo.requestPictureInPicture();
+            }
+        } catch (err) {
+            console.error("PiP toggle failed:", err);
+            showToast("PiP toggle failed");
+        }
+    };
+
+    // Insert safely next to the settings button
+    const settingsBtn = controls.querySelector(".ytp-settings-button");
+    if (settingsBtn) {
+        settingsBtn.insertAdjacentElement('beforebegin', button);
+    } else {
+        controls.prepend(button);
+    }
 }
 
 async function requestDocumentPiP(video) {
@@ -266,7 +381,19 @@ function toggleHelpTooltip() {
         border: 1px solid rgba(255,255,255,0.1);
         backdrop-filter: blur(12px);
     `;
-    help.innerHTML = `
+
+    // Stitch effect for help
+    const stitchHelp = document.createElement("div");
+    stitchHelp.style.cssText = `
+        position: absolute;
+        top: 6px; left: 6px; right: 6px; bottom: 6px;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        pointer-events: none;
+    `;
+    help.appendChild(stitchHelp);
+
+    help.innerHTML += `
         <div style="font-weight: 700; font-size: 16px; color: #c5a059; margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
             <span>⌨️</span> Shortcuts
         </div>
@@ -362,9 +489,16 @@ document.querySelectorAll("video").forEach(enablePiP);
 // Detect new videos (SPA sites)
 const observer = new MutationObserver(() => {
     document.querySelectorAll("video").forEach(enablePiP);
+    handleYouTubeInjection();
 });
 
 observer.observe(document.body, {
     childList: true,
     subtree: true
 });
+
+// Initial check
+handleYouTubeInjection();
+
+// Fallback interval check for YouTube's dynamic UI
+setInterval(handleYouTubeInjection, 2000);
