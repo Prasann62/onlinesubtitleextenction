@@ -2,7 +2,55 @@ const pipBtn = document.getElementById("pipBtn");
 const videoListContainer = document.getElementById("videoListContainer");
 const videoList = document.getElementById("videoList");
 const statusMsg = document.getElementById("statusMsg");
+const themeToggle = document.getElementById("themeToggle");
+const sizeChips = document.querySelectorAll(".stitch-chip");
 
+// ==========================================
+// SETTINGS
+// ==========================================
+function loadSettings() {
+    chrome.storage.local.get(['theme', 'playerSize'], (result) => {
+        // Theme
+        if (result.theme === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggle.checked = true;
+        } else {
+            document.body.classList.remove('light-theme');
+            themeToggle.checked = false;
+        }
+
+        // Size
+        const size = result.playerSize || 'medium';
+        sizeChips.forEach(chip => {
+            if (chip.dataset.size === size) chip.classList.add('active');
+            else chip.classList.remove('active');
+        });
+    });
+}
+
+// Theme Listener
+themeToggle.addEventListener('change', (e) => {
+    const isLight = e.target.checked;
+    if (isLight) document.body.classList.add('light-theme');
+    else document.body.classList.remove('light-theme');
+
+    chrome.storage.local.set({ theme: isLight ? 'light' : 'dark' });
+});
+
+// Size Listener
+sizeChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+        sizeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        chrome.storage.local.set({ playerSize: chip.dataset.size });
+        // TODO: Send message to update live player if needed?
+    });
+});
+
+
+// ==========================================
+// PIP LOGIC
+// ==========================================
 function showStatus(msg, isError = true) {
     statusMsg.textContent = msg;
     statusMsg.style.display = "block";
@@ -12,8 +60,11 @@ function showStatus(msg, isError = true) {
 }
 
 async function init() {
+    loadSettings();
+
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+    // Detect videos via script injection just to get list
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
@@ -32,7 +83,7 @@ async function init() {
             };
         }
     }, (results) => {
-        if (!results || !results[0].result) return;
+        if (chrome.runtime.lastError || !results || !results[0].result) return;
         const { videos, hasIframes, hasCanvas } = results[0].result;
 
         if (videos.length === 0) {
@@ -50,47 +101,23 @@ async function init() {
                 btn.className = "stitch-btn stitch-btn-outline";
                 btn.style.cssText = "width:100%; padding:8px; font-size:11px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-style: dashed;";
                 btn.textContent = `Video ${v.id + 1}: ${v.currentSrc.split('/').pop() || 'Blob/Stream'}`;
-                btn.onclick = () => triggerPiPForIndex(tab.id, v.id);
+                btn.onclick = () => sendToggleMessage(tab.id, v.id);
                 videoList.appendChild(btn);
             });
         }
     });
 }
 
-pipBtn.addEventListener("click", async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    triggerPiPForIndex(tab.id, 0);
-});
-
-function triggerPiPForIndex(tabId, index) {
-    chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: (idx) => {
-            const videos = document.querySelectorAll("video");
-            const video = videos[idx];
-            if (!video) return { success: false, error: "Video not found" };
-
-            try {
-                if (document.pictureInPictureElement) {
-                    document.exitPictureInPicture();
-                    return { success: true, action: "exit" };
-                } else {
-                    return video.requestPictureInPicture()
-                        .then(() => ({ success: true, action: "enter" }))
-                        .catch(err => ({ success: false, error: err.message }));
-                }
-            } catch (err) {
-                return { success: false, error: err.message };
-            }
-        },
-        args: [index]
-    }, (results) => {
-        const res = results[0].result;
-        if (res && !res.success) {
-            showStatus(`PiP Failed: ${res.error}`);
-        }
+function sendToggleMessage(tabId, index = null) {
+    chrome.tabs.sendMessage(tabId, { type: "TOGGLE_PIP", targetIndex: index }).catch(err => {
+        showStatus("Could not communicate with page. Refresh?", true);
     });
 }
+
+pipBtn.addEventListener("click", async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    sendToggleMessage(tab.id, null); // Null means auto-select
+});
 
 init();
 

@@ -6,9 +6,92 @@
     <link rel="stylesheet" href="stitch.css">
     <style>
         body {
-            width: 280px;
+            width: 320px;
             padding: 12px;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Light Theme Override */
+        body.light-theme {
+            background-color: #f8fafc;
+        }
+
+        body.light-theme .stitch-header {
+            color: #1e293b;
+        }
+
+        body.light-theme .stitch-text {
+            color: #334155 !important;
+        }
+
+        /* Switch */
+        .stitch-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+        }
+
+        .stitch-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #6366f1;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(14px);
+        }
+
+        /* Chips */
+        .stitch-chip {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--stitch-text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .stitch-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stitch-chip.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
         }
     </style>
 </head>
@@ -23,6 +106,27 @@
         <button id="pipBtn" class="stitch-btn" style="width: 100%; margin-bottom: 12px;">
             <img src="pip.webp" alt="PiP" style="width: 20px; height: 20px;"> Toggle Picture-in-Picture
         </button>
+
+        <div class="stitch-settings">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 13px; font-weight: 500; color: var(--stitch-text);">Dark Theme</span>
+                <label class="stitch-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+                <span
+                    style="font-size: 13px; font-weight: 500; color: var(--stitch-text); display:block; margin-bottom: 4px;">Floating
+                    Player Size</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="stitch-chip" data-size="small">Small</button>
+                    <button class="stitch-chip active" data-size="medium">Medium</button>
+                    <button class="stitch-chip" data-size="large">Large</button>
+                </div>
+            </div>
+        </div>
 
         <div id="videoListContainer" style="display:none;">
             <div class="stitch-divider"></div>
