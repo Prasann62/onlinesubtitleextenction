@@ -37,7 +37,11 @@
                 "<all_urls>"
             ],
             "js": [
-                "content.js"
+                "content/utils.js",
+                "content/pip.js",
+                "content/ui.js",
+                "content/controls.js",
+                "content/main.js"
             ]
         }
     ],
