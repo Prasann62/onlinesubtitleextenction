@@ -85,7 +85,11 @@ function injectYouTubeButton(video, controls) {
         } else {
             // Fallback
             const activeVideo = document.querySelector("video.html5-main-video") || document.querySelector("video");
-            if (activeVideo) activeVideo.requestPictureInPicture();
+            if (activeVideo && typeof activeVideo.requestPictureInPicture === 'function') {
+                activeVideo.requestPictureInPicture().catch(e => {
+                    console.warn("PiP failed:", e);
+                });
+            }
         }
     };
 

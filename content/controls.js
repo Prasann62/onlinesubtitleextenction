@@ -22,7 +22,11 @@ async function playNext() {
     if (currentIndex < currentVideos.length - 1) {
         const nextVideo = currentVideos[currentIndex + 1];
         if (document.pictureInPictureElement) {
-            await nextVideo.requestPictureInPicture();
+            try {
+                await nextVideo.requestPictureInPicture();
+            } catch (e) {
+                console.warn("Autoplay PiP failed:", e);
+            }
         }
         nextVideo.play();
         showToast("Next Short ⬇️");
@@ -34,7 +38,11 @@ async function playPrev() {
     if (currentIndex > 0) {
         const prevVideo = currentVideos[currentIndex - 1];
         if (document.pictureInPictureElement) {
-            await prevVideo.requestPictureInPicture();
+            try {
+                await prevVideo.requestPictureInPicture();
+            } catch (e) {
+                console.warn("Autoplay Prev PiP failed:", e);
+            }
         }
         prevVideo.play();
         showToast("Previous Short ⬆️");
