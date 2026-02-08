@@ -12,7 +12,17 @@
         "<all_urls>"
     ],
     "action": {
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "pip.webp",
+            "48": "pip.webp",
+            "128": "pip.webp"
+        }
+    },
+    "icons": {
+        "16": "pip.webp",
+        "48": "pip.webp",
+        "128": "pip.webp"
     },
     "background": {
         "service_worker": "background.js"

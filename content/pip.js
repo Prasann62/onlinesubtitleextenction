@@ -13,9 +13,19 @@ async function requestDocumentPiP(video) {
         const originalParent = video.parentElement;
         const originalNextSibling = video.nextSibling;
 
+        // Get saved size preference
+        const sizePreference = await chrome.storage.local.get(['playerSize']);
+        const sizeMode = sizePreference.playerSize || 'medium';
+
+        let width = 380;
+        let height = 175;
+
+        if (sizeMode === "small") { width = 300; height = 169; }
+        else if (sizeMode === "large") { width = 500; height = 281; }
+
         const pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: video.videoWidth || 640,
-            height: video.videoHeight || 360,
+            width: width,
+            height: height,
         });
 
         activePipWindow = pipWindow;
@@ -227,8 +237,8 @@ function toggleFloatingMode(video) {
     // Get size settings
     chrome.storage.local.get(['playerSize'], (result) => {
         const sizeMode = result.playerSize || 'medium';
-        let width = "400px";
-        let height = "225px";
+        let width = "380px";
+        let height = "175px";
 
         if (sizeMode === "small") { width = "300px"; height = "169px"; }
         else if (sizeMode === "large") { width = "500px"; height = "281px"; }
@@ -305,24 +315,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function updateDocumentPipSize(sizeMode) {
-    if (!activePipWindow) return;
+    if (!activePipWindow || activePipWindow.closed) return;
 
-    let width = 400;
-    let height = 225;
-
-    // Dimensions need to match the ones in popup/floating logic for consistency
-    // Note: window.resizeTo includes window decorations, but for Document PiP 
-    // it usually resizes the content area or the whole window depending on OS/Browser.
-    // We'll stick to inner content sizes if possible, but resizeTo is for outer.
-    // Let's use the same values as floating for now.
+    let width = 380;
+    let height = 175;
 
     if (sizeMode === "small") { width = 300; height = 169; }
     else if (sizeMode === "large") { width = 500; height = 281; }
 
     try {
-        activePipWindow.resizeTo(width + 20, height + 40); // Adding some padding for borders/chrome if needed
+        // Document PiP windows can be resized using resizeTo
+        // Some browsers need the window to be explicitly focused first
+        activePipWindow.focus();
+        activePipWindow.resizeTo(width, height);
+
+        // Show feedback toast
+        if (typeof showToast === 'function') {
+            const sizeLabel = sizeMode.charAt(0).toUpperCase() + sizeMode.slice(1);
+            showToast(`PiP Size: ${sizeLabel} (${width}x${height})`);
+        }
     } catch (e) {
-        console.warn("Could not resize Document PiP window", e);
+        console.warn("Could not resize Document PiP window:", e);
+        // Fallback: Save preference for next time
+        if (typeof showToast === 'function') {
+            showToast("Size will apply next PiP session");
+        }
     }
 }
 
@@ -330,8 +347,8 @@ function updateFloatingSize(sizeMode) {
     // 1. Handle Floating Mode (Fallback)
     const activeVideo = document.querySelector("video[data-is-floating='true']");
     if (activeVideo) {
-        let width = "400px";
-        let height = "225px";
+        let width = "380px";
+        let height = "175px";
 
         if (sizeMode === "small") { width = "300px"; height = "169px"; }
         else if (sizeMode === "large") { width = "500px"; height = "281px"; }
@@ -343,6 +360,12 @@ function updateFloatingSize(sizeMode) {
         if (floatCloseBtn) {
             const hVal = parseInt(height.replace("px", ""));
             floatCloseBtn.style.bottom = (20 + hVal - 12) + "px";
+        }
+
+        // Show feedback
+        if (typeof showToast === 'function') {
+            const sizeLabel = sizeMode.charAt(0).toUpperCase() + sizeMode.slice(1);
+            showToast(`Floating Size: ${sizeLabel} (${width} × ${height})`);
         }
     }
 }
