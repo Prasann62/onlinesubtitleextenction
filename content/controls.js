@@ -29,7 +29,7 @@ async function playNext() {
             }
         }
         nextVideo.play();
-        showToast("Next Short ⬇️");
+        showToast("Next Short ⬇️", "success");
     }
 }
 
@@ -45,7 +45,7 @@ async function playPrev() {
             }
         }
         prevVideo.play();
-        showToast("Previous Short ⬆️");
+        showToast("Previous Short ⬆️", "success");
     }
 }
 
@@ -70,26 +70,72 @@ window.addEventListener("keydown", (e) => {
     switch (e.key.toLowerCase()) {
         case "m":
             video.muted = !video.muted;
-            showToast(video.muted ? "Muted 🔇" : "Unmuted 🔊");
+            showToast(video.muted ? "Muted 🔇" : "Unmuted 🔊", "info");
             break;
         case " ":
             // Only toggle if video is present and we are not in an input
             e.preventDefault();
             if (video.paused) {
                 video.play().catch(() => { });
-                showToast("Playing ▶️");
+                showToast("Playing ▶️", "success");
             } else {
                 video.pause();
-                showToast("Paused ⏸️");
+                showToast("Paused ⏸️", "info");
             }
             break;
         case "arrowleft":
-            video.currentTime = Math.max(0, video.currentTime - 5);
-            showToast("Rewind 5s ⏪");
+            if (!e.altKey) {
+                video.currentTime = Math.max(0, video.currentTime - 5);
+                showToast("Rewind 5s ⏪", "info");
+            }
             break;
         case "arrowright":
-            video.currentTime = Math.min(video.duration, video.currentTime + 5);
-            showToast("Forward 5s ⏪");
+            if (!e.altKey) {
+                video.currentTime = Math.min(video.duration, video.currentTime + 5);
+                showToast("Forward 5s ⏩", "info");
+            }
+            break;
+        case "arrowup":
+            if (e.altKey) {
+                // Volume control
+                e.preventDefault();
+                video.volume = Math.min(1, video.volume + 0.1);
+                showToast(`Volume: ${Math.round(video.volume * 100)}% 🔊`, "success");
+            } else if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
+                playPrev();
+            }
+            break;
+        case "arrowdown":
+            if (e.altKey) {
+                // Volume control
+                e.preventDefault();
+                video.volume = Math.max(0, video.volume - 0.1);
+                showToast(`Volume: ${Math.round(video.volume * 100)}% ${video.volume === 0 ? '🔇' : '🔉'}`, "warning");
+            } else if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
+                playNext();
+            }
+            break;
+        case ">":
+            if (e.shiftKey) {
+                // Speed up
+                e.preventDefault();
+                const speeds = typeof CONFIG !== 'undefined' ? CONFIG.PLAYBACK_SPEEDS : [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                const currentSpeed = video.playbackRate;
+                const nextSpeed = speeds.find(s => s > currentSpeed) || speeds[speeds.length - 1];
+                video.playbackRate = nextSpeed;
+                showToast(`Speed: ${nextSpeed}x ⏩`, "success");
+            }
+            break;
+        case "<":
+            if (e.shiftKey) {
+                // Slow down - FIX: Create copy before reversing to avoid mutating CONFIG array
+                e.preventDefault();
+                const speeds = typeof CONFIG !== 'undefined' ? CONFIG.PLAYBACK_SPEEDS : [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+                const currentSpeed = video.playbackRate;
+                const prevSpeed = [...speeds].reverse().find(s => s < currentSpeed) || speeds[0];
+                video.playbackRate = prevSpeed;
+                showToast(`Speed: ${prevSpeed}x ⏪`, "success");
+            }
             break;
         case "h":
             toggleHelpTooltip();
@@ -106,16 +152,6 @@ window.addEventListener("keydown", (e) => {
             // Alt + P is usually handled by chrome.commands, but we can double handle here for responsiveness if wanted
             // but manifest command is safer.
             break;
-        case "arrowdown":
-            if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
-                playNext();
-            }
-            break;
-        case "arrowup":
-            if (location.href.includes("youtube.com/shorts") || location.href.includes("/reel/")) {
-                playPrev();
-            }
-            break;
     }
 });
 
@@ -128,6 +164,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             document.exitPictureInPicture().catch(() => { });
         }
         window.postMessage({ type: "CLOSE_PIP" }, "*");
+    } else if (request.type === "AUTO_PIP_CHECK") {
+        // Check if there's a playing video on this tab
+        const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector('video');
+        if (video && !video.paused && !document.pictureInPictureElement) {
+            // Video is playing and not in PiP, trigger PiP
+            if (typeof togglePiP === 'function') {
+                togglePiP();
+            }
+        }
     }
 });
 

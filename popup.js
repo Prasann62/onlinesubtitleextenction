@@ -1,3 +1,4 @@
+// DOM element references with null checking
 const pipBtn = document.getElementById("pipBtn");
 const videoListContainer = document.getElementById("videoListContainer");
 const videoList = document.getElementById("videoList");
@@ -5,11 +6,16 @@ const statusMsg = document.getElementById("statusMsg");
 const themeToggle = document.getElementById("themeToggle");
 const sizeChips = document.querySelectorAll(".stitch-chip");
 
+// Early exit if critical elements missing
+if (!pipBtn || !statusMsg) {
+    console.error("PiP Extension: Critical popup elements missing");
+}
+
 // ==========================================
 // SETTINGS
 // ==========================================
 function loadSettings() {
-    chrome.storage.local.get(['theme', 'playerSize'], (result) => {
+    chrome.storage.local.get(['theme', 'playerSize', 'autoPipEnabled'], (result) => {
         // Theme
         if (result.theme === 'light') {
             document.body.classList.add('light-theme');
@@ -25,17 +31,25 @@ function loadSettings() {
             if (chip.dataset.size === size) chip.classList.add('active');
             else chip.classList.remove('active');
         });
+
+        // Auto-PiP
+        const autoPipToggle = document.getElementById('autoPipToggle');
+        if (autoPipToggle) {
+            autoPipToggle.checked = result.autoPipEnabled || false;
+        }
     });
 }
 
 // Theme Listener
-themeToggle.addEventListener('change', (e) => {
-    const isLight = e.target.checked;
-    if (isLight) document.body.classList.add('light-theme');
-    else document.body.classList.remove('light-theme');
+if (themeToggle) {
+    themeToggle.addEventListener('change', (e) => {
+        const isLight = e.target.checked;
+        if (isLight) document.body.classList.add('light-theme');
+        else document.body.classList.remove('light-theme');
 
-    chrome.storage.local.set({ theme: isLight ? 'light' : 'dark' });
-});
+        chrome.storage.local.set({ theme: isLight ? 'light' : 'dark' });
+    });
+}
 
 // Size Listener
 sizeChips.forEach(chip => {
@@ -57,6 +71,29 @@ sizeChips.forEach(chip => {
         });
     });
 });
+
+// Auto-PiP Toggle
+const autoPipToggle = document.getElementById('autoPipToggle');
+if (autoPipToggle) {
+    autoPipToggle.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked;
+        chrome.storage.local.set({ autoPipEnabled: isEnabled });
+
+        // Show feedback
+        const status = statusMsg;
+        status.textContent = isEnabled
+            ? "✨ Auto-PiP enabled: Videos will enter PiP when you switch tabs"
+            : "Auto-PiP disabled";
+        status.style.display = "block";
+        status.style.background = "rgba(99, 102, 241, 0.1)";
+        status.style.color = "#6366f1";
+        status.style.borderColor = "rgba(99, 102, 241, 0.2)";
+
+        setTimeout(() => {
+            status.style.display = "none";
+        }, 3000);
+    });
+}
 
 
 // ==========================================

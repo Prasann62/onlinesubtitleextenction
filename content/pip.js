@@ -185,17 +185,28 @@ async function togglePiP(index = null) {
     if (index !== null) {
         const videos = document.querySelectorAll("video");
         video = videos[index];
+        if (!video) {
+            showToast("Video not found at index ${index} 🚫", "error");
+            return;
+        }
     } else {
-        video = document.querySelector("video.html5-main-video") || document.querySelector("video");
+        // Use smart video detection if available, otherwise fallback to simple query
+        if (typeof findPrimaryVideo === 'function') {
+            video = findPrimaryVideo();
+        }
+        if (!video) {
+            video = document.querySelector("video.html5-main-video") || document.querySelector("video");
+        }
     }
 
     if (!video) {
-        showToast("No video found 🚫");
+        showToast("No video found on this page 🚫", "error");
         return;
     }
 
     if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
+        showToast("PiP Closed", "info");
         return;
     }
 
@@ -288,7 +299,7 @@ function toggleFloatingMode(video) {
         floatCloseBtn.style.bottom = (20 + hVal - 12) + "px";
     });
 
-    showToast("Floating Mode (Fallback) 🎈");
+    showToast("Floating Mode (Fallback) 🎈", "info");
 }
 
 function disableFloatingMode(video) {

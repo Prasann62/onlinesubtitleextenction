@@ -127,6 +127,7 @@ function toggleHelpTooltip() {
         box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         border: 1px solid rgba(255,255,255,0.1);
         backdrop-filter: blur(12px);
+        max-width: 400px;
     `;
 
     // Stitch effect for help
@@ -142,7 +143,7 @@ function toggleHelpTooltip() {
 
     help.innerHTML += `
         <div style="font-weight: 700; font-size: 16px; color: #c5a059; margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-            <span>⌨️</span> Shortcuts
+            <span>⌨️</span> Keyboard Shortcuts
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px;">
             <span>Toggle PiP</span> <span style="color: #6366f1; font-weight: 500;">Alt + P</span>
@@ -150,9 +151,20 @@ function toggleHelpTooltip() {
             <span>Play/Pause</span> <span style="color: #6366f1; font-weight: 500;">Space</span>
             <span>Mute/Unmute</span> <span style="color: #6366f1; font-weight: 500;">M</span>
             <span>Seek 5s</span> <span style="color: #6366f1; font-weight: 500;">← / →</span>
-            <span>Resize</span> <span style="color: #6366f1; font-weight: 500;">Alt ±</span>
-            <span>Move</span> <span style="color: #6366f1; font-weight: 500;">Alt Arw</span>
+            <span>Volume ±</span> <span style="color: #10b981; font-weight: 500;">Alt + ↑/↓</span>
+            <span>Speed ±</span> <span style="color: #10b981; font-weight: 500;">Shift + &lt;/&gt;</span>
+            <span>Resize PiP</span> <span style="color: #6366f1; font-weight: 500;">Alt + ±</span>
+            <span>Move PiP</span> <span style="color: #6366f1; font-weight: 500;">Alt + Arrows</span>
             <span>Help</span> <span style="color: #6366f1; font-weight: 500;">H</span>
+        </div>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <div style="font-weight: 600; color: #c5a059; margin-bottom: 8px; font-size: 12px;">✨ New Features</div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+                • Volume control with Alt+↑/↓<br>
+                • Playback speed with Shift+&lt;/&gt;<br>
+                • Optimized performance<br>
+                • Enhanced video detection
+            </div>
         </div>
         <div style="margin-top: 12px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">Press 'H' to dismiss</div>
     `;
