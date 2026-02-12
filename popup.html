@@ -4,149 +4,94 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="stitch.css">
-    <style>
-        body {
-            width: 320px;
-            padding: 12px;
-            overflow-x: hidden;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        /* Light Theme Override */
-        body.light-theme {
-            background-color: #f8fafc;
-        }
-
-        body.light-theme .stitch-header {
-            color: #1e293b;
-        }
-
-        body.light-theme .stitch-text {
-            color: #334155 !important;
-        }
-
-        /* Switch */
-        .stitch-switch {
-            position: relative;
-            display: inline-block;
-            width: 34px;
-            height: 20px;
-        }
-
-        .stitch-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 12px;
-            width: 12px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: #6366f1;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(14px);
-        }
-
-        /* Chips */
-        .stitch-chip {
-            flex: 1;
-            padding: 4px 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--stitch-text-muted);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .stitch-chip:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .stitch-chip.active {
-            background: #6366f1;
-            color: white;
-            border-color: #6366f1;
-        }
-    </style>
 </head>
 
-<body class="animate-in">
-    <div class="stitch-card">
-        <div class="stitch-header">
-            <img src="pip.webp" alt="PiP Logo" style="width: 24px; height: 24px; margin-right: 8px;">
-            PiP Controller
-        </div>
+<body class="theme-dark">
+    <div class="app-container">
+        <!-- Background Elements for Glassmorphism -->
+        <div class="bg-glow-1"></div>
+        <div class="bg-glow-2"></div>
 
-        <button id="pipBtn" class="stitch-btn" style="width: 100%; margin-bottom: 12px;">
-            <img src="pip.webp" alt="PiP" style="width: 20px; height: 20px;"> Toggle Picture-in-Picture
-        </button>
-
-        <div class="stitch-settings">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 13px; font-weight: 500; color: var(--stitch-text);">Dark Theme</span>
-                <label class="stitch-switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 13px; font-weight: 500; color: var(--stitch-text);">Auto-PiP on Tab
-                    Switch</span>
-                <label class="stitch-switch">
-                    <input type="checkbox" id="autoPipToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <div style="margin-bottom: 8px;">
-                <span
-                    style="font-size: 13px; font-weight: 500; color: var(--stitch-text); display:block; margin-bottom: 4px;">Floating
-                    Player Size</span>
-                <div style="display: flex; gap: 8px;">
-                    <button class="stitch-chip" data-size="small">Small</button>
-                    <button class="stitch-chip active" data-size="medium">Medium</button>
-                    <button class="stitch-chip" data-size="large">Large</button>
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <img src="pip.webp" alt="Logo">
+                </div>
+                <div class="brand-text">
+                    <h1>S.T.I.T.C.H</h1>
+                    <span class="badge">DEV-BUILD</span>
                 </div>
             </div>
-        </div>
+            <div class="header-actions">
+                <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
 
-        <div id="videoListContainer" style="display:none;">
-            <div class="stitch-divider"></div>
-            <p style="font-size:11px; color:var(--stitch-text-muted); margin-bottom:8px; font-weight: 500;">Multiple
-                videos detected:</p>
-            <div id="videoList" style="display:flex;flex-direction:column;gap:6px;"></div>
-        </div>
+        <main class="app-content">
+            <!-- Primary Action -->
+            <section class="control-section">
+                <button id="pipBtn" class="hero-btn">
+                    <span class="btn-icon">
+                        <img src="pip.webp" alt="" width="24">
+                    </span>
+                    <span class="btn-text">INITIALIZE PiP</span>
+                    <span class="btn-glow"></span>
+                </button>
+            </section>
 
-        <div id="statusMsg"
-            style="display:none; margin-top:12px; padding:10px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); border-radius:8px; font-size:11px; color:#f87171; line-height:1.4;">
-        </div>
+            <!-- Configuration Grid -->
+            <section class="config-grid">
+                <!-- Auto-PiP Toggle -->
+                <div class="config-card">
+                    <div class="config-header">
+                        <span class="label">AUTO-PROTOCOL</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoPipToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="config-desc">Engage PiP on tab switch</div>
+                </div>
+
+                <!-- Size Selector -->
+                <div class="config-card size-card">
+                    <span class="label">VIEWPORT SIZE</span>
+                    <div class="segment-control">
+                        <button class="segment-btn" data-size="small">S</button>
+                        <button class="segment-btn active" data-size="medium">M</button>
+                        <button class="segment-btn" data-size="large">L</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status / Logs -->
+            <div id="videoListContainer" class="logs-container" style="display:none;">
+                <div class="logs-header">
+                    <span class="blink">●</span> DETECTED STREAMS
+                </div>
+                <div id="videoList" class="logs-list"></div>
+            </div>
+
+            <div id="statusMsg" class="system-msg" style="display:none;"></div>
+        </main>
+
+        <footer class="app-footer">
+            <span class="system-id">SYS.ID: 9X-214</span>
+            <span class="connection-status online">ONLINE</span>
+        </footer>
     </div>
     <script src="popup.js"></script>
 </body>
