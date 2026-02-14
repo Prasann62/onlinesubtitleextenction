@@ -130,6 +130,10 @@ async function requestDocumentPiP(video) {
             <button id="forward" class="pip-btn" title="Forward 5s">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
             </button>
+            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+            <button id="snapshot" class="pip-btn" title="Take Snapshot">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </button>
         `;
         container.appendChild(overlay);
 
@@ -148,6 +152,7 @@ async function requestDocumentPiP(video) {
         };
         overlay.querySelector("#rewind").onclick = () => video.currentTime -= 5;
         overlay.querySelector("#forward").onclick = () => video.currentTime += 5;
+        overlay.querySelector("#snapshot").onclick = () => takeSnapshot(video);
 
         // Restore video on close
         pipWindow.addEventListener("pagehide", () => {
@@ -210,6 +215,38 @@ async function requestDocumentPiP(video) {
     } catch (e) {
         console.error("Document PiP failed:", e);
         return false;
+    }
+}
+
+// Enable PiP functionality on a video element
+function takeSnapshot(video) {
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataURL = canvas.toDataURL("image/png");
+
+        // Create link and download
+        const link = document.createElement("a");
+        link.href = dataURL;
+        link.download = `stitch-snapshot-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Feedback
+        if (typeof showToast === 'function') {
+            showToast("Snapshot Saved 📸");
+        }
+    } catch (e) {
+        console.error("Snapshot failed:", e);
+        if (typeof showToast === 'function') {
+            showToast("Snapshot Failed 🚫", "error");
+        }
     }
 }
 

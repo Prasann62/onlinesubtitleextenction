@@ -98,8 +98,127 @@ function showStatus(msg, isError = true) {
     }, 3000);
 }
 
+// ==========================================
+// NEURO-LINK VISUALIZER
+// ==========================================
+function initNeuroLink() {
+    const canvas = document.getElementById('neuroLinkCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let animationId;
+
+    // Config
+    const particles = [];
+    const particleCount = 20;
+    const connectionDistance = 60;
+
+    function resize() {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+    }
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 1.5;
+            this.vy = (Math.random() - 0.5) * 1.5;
+            this.size = Math.random() * 2 + 1;
+            this.life = Math.random();
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Bounce off edges
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+
+            // Randomly pulse opacity
+            this.life += 0.01;
+        }
+
+        draw() {
+            const opacity = (Math.sin(this.life * 5) + 1) / 2 * 0.5 + 0.2;
+            ctx.fillStyle = `rgba(0, 243, 255, ${opacity})`; // Neon Cyan
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Update and draw particles
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+        // Draw connections
+        ctx.strokeStyle = 'rgba(188, 19, 254, 0.15)'; // Neon Purple
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < connectionDistance) {
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                }
+            }
+        }
+        ctx.stroke();
+
+        // Draw simulated waveform
+        drawWaveform();
+
+        animationId = requestAnimationFrame(animate);
+    }
+
+    function drawWaveform() {
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+
+        const time = Date.now() * 0.002;
+        for (let x = 0; x < width; x += 5) {
+            // Combine played frequencies
+            const y = height / 2 +
+                Math.sin(x * 0.05 + time) * 10 * Math.sin(time * 0.5) +
+                Math.sin(x * 0.02 - time * 1.2) * 5;
+
+            ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = 'rgba(0, 243, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Start
+    resize();
+    window.addEventListener('resize', resize);
+    initParticles();
+    animate();
+}
+
 async function init() {
     loadSettings();
+    initNeuroLink();
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
