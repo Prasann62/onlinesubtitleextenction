@@ -1,0 +1,243 @@
+/* ==========================================
+   STITCH UI - Content Styles
+   ========================================== */
+
+:root {
+    --void-bg: #050505;
+    --glass-surface: rgba(20, 20, 20, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --neon-cyan: #00f3ff;
+    --neon-purple: #bc13fe;
+    --text-primary: #ffffff;
+    --text-muted: #888888;
+    --danger: #ff2a6d;
+    --success: #05ffa1;
+    --backdrop-blur: blur(12px);
+}
+
+/* PiP Overlay (in Document PiP) */
+.pip-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    display: flex;
+    gap: 12px;
+    padding: 12px 24px;
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--backdrop-blur);
+    border-radius: 50px;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.container:hover .pip-overlay {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.pip-btn {
+    background: #3b82f6;
+    border: none;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pip-btn:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+}
+
+.pip-btn:active {
+    transform: scale(0.95);
+}
+
+.separator {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 4px;
+}
+
+/* Floating Mode (Fallback) */
+.stitch-floating-video {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 2147483647 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.1) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(0, 243, 255, 0.3) !important;
+    object-fit: cover !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stitch-floating-close-btn {
+    position: fixed;
+    border-radius: 50%;
+    background: rgba(20, 20, 20, 0.8);
+    color: var(--danger);
+    border: 1px solid rgba(255, 42, 109, 0.3);
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    z-index: 2147483648;
+    font-size: 18px;
+    line-height: 1;
+    display: none;
+    box-shadow: 0 0 10px rgba(255, 42, 109, 0.2);
+    backdrop-filter: blur(4px);
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+}
+
+.stitch-floating-close-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 42, 109, 0.4);
+    border-color: var(--danger);
+}
+
+/* YouTube Button */
+.pip-yt-button {
+    display: inline-block !important;
+    position: relative !important;
+    width: 48px !important;
+    height: 100% !important;
+    vertical-align: top !important;
+    transition: background 0.2s, transform 0.2s !important;
+    cursor: pointer !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+}
+
+.pip-yt-button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
+}
+
+.pip-yt-button svg {
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none !important;
+    transform: scale(0.65) !important;
+}
+
+.pip-yt-button:hover svg path {
+    fill: #6366f1 !important;
+    filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5));
+}
+
+.pip-yt-button:hover::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* Help Tooltip */
+#pip-help-tooltip {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(10, 10, 12, 0.95);
+    color: #f8fafc;
+    padding: 20px;
+    border-radius: 16px;
+    z-index: 2147483647;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    max-width: 400px;
+}
+
+.stitch-help-border {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.help-header {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--secondary);
+    margin-bottom: 12px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+}
+
+.help-key {
+    color: #6366f1;
+    font-weight: 500;
+}
+
+.help-key-alt {
+    color: #10b981;
+    font-weight: 500;
+}
+
+.help-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.help-section-title {
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.help-list {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.help-dismiss {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: center;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-top: 8px;
+}

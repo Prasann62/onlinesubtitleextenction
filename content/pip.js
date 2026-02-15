@@ -59,58 +59,16 @@ async function requestDocumentPiP(video) {
         container.appendChild(video);
         pipWindow.document.body.appendChild(container);
 
-        // 🎨 Inject Stitch Styles
+        // 🎨 Inject Stitch Styles (now pointing to content/styles.css)
         const link = pipWindow.document.createElement("link");
         link.rel = "stylesheet";
-        link.href = chrome.runtime.getURL("stitch.css");
+        link.href = chrome.runtime.getURL("content/styles.css");
         pipWindow.document.head.appendChild(link);
 
-        // Inject inline overrides for PiP window specifics
+        // Inject inline overrides for PiP window specifics (layout only)
         const style = pipWindow.document.createElement("style");
         style.textContent = `
-            body { background: #050505 !important; width: 100% !important; height: 100% !important; overflow: hidden !important; }
-            .pip-overlay {
-                position: absolute;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%) translateY(20px);
-                display: flex;
-                gap: 12px;
-                padding: 12px 24px;
-                background: rgba(20, 20, 20, 0.6);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(12px);
-                border-radius: 50px;
-                opacity: 0;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 1000;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            }
-            .container:hover .pip-overlay {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-            .pip-btn {
-                background: #3b82f6;
-                border: none;
-                color: white;
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 20px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            }
-            .pip-btn:hover {
-                background: #2563eb;
-                transform: scale(1.05);
-                box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
-            }
-            .pip-btn:active { transform: scale(0.95); }
+            body { background: #050505 !important; width: 100% !important; height: 100% !important; overflow: hidden !important; margin: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
         `;
         pipWindow.document.head.appendChild(style);
 
@@ -130,7 +88,7 @@ async function requestDocumentPiP(video) {
             <button id="forward" class="pip-btn" title="Forward 5s">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
             </button>
-            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+            <div class="separator"></div>
             <button id="snapshot" class="pip-btn" title="Take Snapshot">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             </button>
@@ -360,58 +318,23 @@ function toggleFloatingMode(video) {
         if (sizeMode === "small") { width = "300px"; height = "169px"; }
         else if (sizeMode === "large") { width = "500px"; height = "281px"; }
 
-        // Apply floating styles
-        Object.assign(video.style, {
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            width: width,
-            height: height,
-            zIndex: "2147483647",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.1)", // Stitch Neon Glow
-            borderRadius: "12px",
-            border: "1px solid rgba(0, 243, 255, 0.3)", // Neon Cyan Border
-            objectFit: "cover",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        });
+        // Apply floating styles via class and specific dimensions
+        video.classList.add("stitch-floating-video");
+        video.style.width = width;
+        video.style.height = height;
 
         // Create Close Button (Adjust position based on size)
         if (!floatCloseBtn) {
             floatCloseBtn = document.createElement("button");
             floatCloseBtn.innerHTML = "×";
-            Object.assign(floatCloseBtn.style, {
-                position: "fixed",
-                borderRadius: "50%",
-                background: "rgba(20, 20, 20, 0.8)",
-                color: "#ff2a6d", // Danger color
-                border: "1px solid rgba(255, 42, 109, 0.3)",
-                width: "28px",
-                height: "28px",
-                cursor: "pointer",
-                zIndex: "2147483648",
-                fontSize: "18px",
-                lineHeight: "1",
-                display: "none",
-                boxShadow: "0 0 10px rgba(255, 42, 109, 0.2)",
-                backdropFilter: "blur(4px)",
-                transition: "all 0.2s"
-            });
-            floatCloseBtn.onmouseenter = () => {
-                floatCloseBtn.style.transform = "scale(1.1)";
-                floatCloseBtn.style.boxShadow = "0 0 15px rgba(255, 42, 109, 0.4)";
-                floatCloseBtn.style.borderColor = "#ff2a6d";
-            };
-            floatCloseBtn.onmouseleave = () => {
-                floatCloseBtn.style.transform = "scale(1)";
-                floatCloseBtn.style.boxShadow = "0 0 10px rgba(255, 42, 109, 0.2)";
-                floatCloseBtn.style.borderColor = "rgba(255, 42, 109, 0.3)";
-            };
+            floatCloseBtn.className = "stitch-floating-close-btn";
+
             floatCloseBtn.onclick = () => disableFloatingMode(video);
             document.body.appendChild(floatCloseBtn);
         }
 
         // Adjust button position dynamically
-        floatCloseBtn.style.display = "block";
+        floatCloseBtn.style.display = "flex";
         floatCloseBtn.style.right = "25px";
         // Bottom = Video Bottom (20) + Video Height (height in px) - 12 (half button)
         const hVal = parseInt(height.replace("px", ""));
@@ -426,6 +349,7 @@ function disableFloatingMode(video) {
 
     // Restore
     video.setAttribute("style", floatOriginalStyle);
+    video.classList.remove("stitch-floating-video");
     delete video.dataset.isFloating;
 
     if (floatCloseBtn) {

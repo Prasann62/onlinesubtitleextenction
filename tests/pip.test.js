@@ -104,32 +104,37 @@ describe('Floating Mode Fallback', () => {
             if (video.dataset.isFloating === "true") return;
 
             video.dataset.isFloating = "true";
-            Object.assign(video.style, {
+            video.classList.add("stitch-floating-video");
+            // Inline styles removed in favor of class
+            /* Object.assign(video.style, {
                 position: "fixed",
                 bottom: "20px",
                 right: "20px",
                 width: "380px",
                 height: "175px",
                 zIndex: "2147483647"
-            });
+            }); */
         }
 
         toggleFloatingMode(mockVideo);
 
         expect(mockVideo.dataset.isFloating).toBe("true");
-        expect(mockVideo.style.position).toBe("fixed");
-        expect(mockVideo.style.bottom).toBe("20px");
-        expect(mockVideo.style.right).toBe("20px");
+        expect(mockVideo.className.includes("stitch-floating-video")).toBe(true);
+        // expect(mockVideo.style.position).toBe("fixed"); // Now handled by class
+        // expect(mockVideo.style.bottom).toBe("20px");    // Now handled by class
+        // expect(mockVideo.style.right).toBe("20px");     // Now handled by class
     });
 
     test('should disable floating mode', () => {
         function toggleFloatingMode(video) {
             if (video.dataset.isFloating === "true") {
                 delete video.dataset.isFloating;
+                video.classList.remove("stitch-floating-video");
                 video.style.position = '';
             } else {
                 video.dataset.isFloating = "true";
-                video.style.position = "fixed";
+                video.classList.add("stitch-floating-video");
+                // video.style.position = "fixed"; // Handled by class
             }
         }
 
@@ -140,5 +145,6 @@ describe('Floating Mode Fallback', () => {
         // Disable floating mode
         toggleFloatingMode(mockVideo);
         expect(mockVideo.dataset.isFloating).toBeUndefined();
+        expect(mockVideo.className.includes("stitch-floating-video")).toBe(false);
     });
 });

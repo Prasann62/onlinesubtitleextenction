@@ -79,11 +79,46 @@ const CONFIG = {
     }
 };
 
-// Make config immutable
-Object.freeze(CONFIG);
-Object.freeze(CONFIG.SIZES);
-Object.freeze(CONFIG.SHORTCUTS);
-Object.freeze(CONFIG.PLAYBACK_SPEEDS);
-Object.freeze(CONFIG.PLATFORMS);
-Object.freeze(CONFIG.FEATURES);
-Object.freeze(CONFIG.COLORS);
+// Make config mutable for runtime overrides
+// Object.freeze(CONFIG); 
+// Object.freeze(CONFIG.SIZES);
+// Object.freeze(CONFIG.SHORTCUTS);
+// Object.freeze(CONFIG.PLAYBACK_SPEEDS);
+// Object.freeze(CONFIG.PLATFORMS);
+// Object.freeze(CONFIG.FEATURES);
+// Object.freeze(CONFIG.COLORS);
+
+async function initConfiguration() {
+    try {
+        const result = await chrome.storage.local.get(['playerSize', 'autoPipEnabled', 'theme']);
+
+        if (result.playerSize && CONFIG.SIZES[result.playerSize]) {
+            // We can't easily change the structure of CONFIG.SIZES if it was frozen, 
+            // but we can add a 'current' field or just use the storage value directly in logic.
+            // For now, let's attach the preference to CONFIG for easy access
+            CONFIG.CURRENT_SIZE_PREFERENCE = result.playerSize;
+        }
+
+        if (result.autoPipEnabled !== undefined) {
+            CONFIG.FEATURES.AUTO_PIP_ON_TAB_SWITCH = result.autoPipEnabled;
+        }
+
+        // Theme is handled effectively by CSS injection or body class, 
+        // but we can store it here if needed for JS logic
+        CONFIG.CURRENT_THEME = result.theme || 'dark';
+
+        console.log("Stitch PiP: Configuration loaded", {
+            size: CONFIG.CURRENT_SIZE_PREFERENCE,
+            autoPip: CONFIG.FEATURES.AUTO_PIP_ON_TAB_SWITCH,
+            theme: CONFIG.CURRENT_THEME
+        });
+
+    } catch (e) {
+        console.warn("Stitch PiP: Failed to load configuration from storage", e);
+    }
+}
+
+// Auto-initialize if running in a context where chrome.storage is available
+if (typeof chrome !== 'undefined' && chrome.storage) {
+    initConfiguration();
+}

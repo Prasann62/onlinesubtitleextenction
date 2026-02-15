@@ -21,6 +21,10 @@
             "128": "pip.webp"
         }
     },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
     "icons": {
         "16": "pip.webp",
         "48": "pip.webp",
@@ -55,6 +59,9 @@
                 "content/ui.js",
                 "content/controls.js",
                 "content/main.js"
+            ],
+            "css": [
+                "content/styles.css"
             ]
         }
     ],
