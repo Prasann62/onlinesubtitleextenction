@@ -15,61 +15,65 @@
     --backdrop-blur: blur(12px);
 }
 
-/* PiP Overlay (in Document PiP) */
+/* PiP Overlay (VLC Style - Bottom Bar) */
 .pip-overlay {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
     display: flex;
-    gap: 12px;
-    padding: 12px 24px;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 20px;
     background: var(--glass-surface);
-    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border);
     backdrop-filter: var(--backdrop-blur);
-    border-radius: 50px;
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(100%);
+    transition: all 0.3s ease;
     z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .container:hover .pip-overlay {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
 }
 
 .pip-btn {
-    background: #3b82f6;
+    background: transparent;
     border: none;
-    color: white;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    color: #e0e0e0;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .pip-btn:hover {
-    background: #2563eb;
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: none;
+    transform: scale(1.1);
 }
 
 .pip-btn:active {
     transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .separator {
     width: 1px;
     height: 24px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 0 4px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 8px;
 }
 
 /* Floating Mode (Fallback) */

@@ -76,7 +76,8 @@
         },
         {
             "resources": [
-                "stitch.css"
+                "stitch.css",
+                "content/styles.css"
             ],
             "matches": [
                 "<all_urls>"
